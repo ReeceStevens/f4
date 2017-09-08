@@ -1,0 +1,18 @@
+[package]
+authors = ["ReeceStevens <reecestevens24@gmail.com>"]
+name = "f4"
+version = "0.1.0"
+
+[dependencies]
+bare-metal = "0.1.0"
+cortex-m = "0.3.1"
+vcell = "0.1.0"
+
+[dependencies.cortex-m-rt]
+features = ["abort-on-panic"]
+version = "0.3.3"
+
+[dependencies.stm32f40x]
+optional = false
+features = ['rt']
+path = "../stm32f40x"
