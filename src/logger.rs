@@ -1,6 +1,6 @@
-use core::fmt::Write;
 use core::fmt;
-use cortex_m_semihosting::hio;
+use core::fmt::Write;
+pub use cortex_m_semihosting::hio as hio;
 
 pub enum LogLevel {
     l_info,
@@ -9,6 +9,8 @@ pub enum LogLevel {
     l_fatal
 }
 
+// TODO: Make this debug-mode only (i.e. make all logging calls noops
+// when compiling for release)
 #[macro_export]
 macro_rules! logger {
     ($level:expr, $($arg:tt)*) => {
