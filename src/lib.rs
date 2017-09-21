@@ -1,3 +1,4 @@
+#![warn(non_camel_case_types)]
 #![no_std]
 #![ feature ( const_fn ) ]
 #![macro_use]
@@ -6,5 +7,5 @@ extern crate cortex_m;
 pub extern crate cortex_m_semihosting;
 
 pub mod gpio;
-// pub mod spi;
+pub mod spi;
 pub mod logger;
