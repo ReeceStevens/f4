@@ -14,7 +14,7 @@ pub enum GPIO_Speed {
     MAX_100MHZ
 }
 
-pub enum GPIO_Output {
+pub enum GPIO_OutputType {
     PP,
     OD
 }
@@ -26,38 +26,30 @@ pub enum GPIO_PuPd {
 }
 
 pub enum GPIO_AF {
-    // 0x01
+    NONE,
     AF1_TIM1,
     AF1_TIM2,
-    // 0x02
     AF2_TIM3,
     AF2_TIM4,
     AF2_TIM5,
-    //0x03
     AF3_TIM9,
     AF3_TIM10,
     AF3_TIM11,
-    // 0x04
     AF4_I2C1,
     AF4_I2C2,
     AF4_I2C3,
-    // 0x05
     AF5_SPI1,
     AF5_SPI2,
     AF5_SPI3,
     AF5_SPI4,
-    // 0x06
     AF6_SPI2,
     AF6_SPI3,
     AF6_SPI4,
     AF6_SPI5,
-    // 0x07
     AF7_SPI3,
     AF7_USART1,
     AF7_USART2,
-    // 0x08
     AF8_USART6,
-    // 0x09
     AF9_TIM14,
     AF9_I2C2,
     AF9_I2C3
@@ -65,34 +57,45 @@ pub enum GPIO_AF {
 
 impl GPIO_AF {
     fn af_to_val(&self) -> u8 {
+        use self::GPIO_AF::*;
         match *self {
-            GPIO_AF::AF1_TIM1 => 0x01,
-            GPIO_AF::AF1_TIM2 => 0x01,
-            GPIO_AF::AF2_TIM3 => 0x02,
-            GPIO_AF::AF2_TIM4 => 0x02,
-            GPIO_AF::AF2_TIM5 => 0x02,
-            GPIO_AF::AF3_TIM9 => 0x03,
-            GPIO_AF::AF3_TIM10 => 0x03,
-            GPIO_AF::AF3_TIM11 => 0x03,
-            GPIO_AF::AF4_I2C1 => 0x04,
-            GPIO_AF::AF4_I2C2 => 0x04,
-            GPIO_AF::AF4_I2C3 => 0x04,
-            GPIO_AF::AF5_SPI1 => 0x05,
-            GPIO_AF::AF5_SPI2 => 0x05,
-            GPIO_AF::AF5_SPI3 => 0x05,
-            GPIO_AF::AF5_SPI4 => 0x05,
-            GPIO_AF::AF6_SPI2 => 0x06,
-            GPIO_AF::AF6_SPI3 => 0x06,
-            GPIO_AF::AF6_SPI4 => 0x06,
-            GPIO_AF::AF6_SPI5 => 0x06,
-            GPIO_AF::AF7_SPI3 => 0x07,
-            GPIO_AF::AF7_USART1 => 0x07,
-            GPIO_AF::AF7_USART2 => 0x07,
-            GPIO_AF::AF8_USART6 => 0x08,
-            GPIO_AF::AF9_TIM14 => 0x09,
-            GPIO_AF::AF9_I2C2 => 0x09,
-            GPIO_AF::AF9_I2C3 => 0x09
+            NONE                                         => 0x00,
+            AF1_TIM1  | AF1_TIM2                         => 0x01,
+            AF2_TIM3  | AF2_TIM4   | AF2_TIM5            => 0x02,
+            AF3_TIM9  | AF3_TIM10  | AF3_TIM11           => 0x03,
+            AF4_I2C1  | AF4_I2C2   | AF4_I2C3            => 0x04,
+            AF5_SPI1  | AF5_SPI2   | AF5_SPI3 | AF5_SPI4 => 0x05,
+            AF6_SPI2  | AF6_SPI3   | AF6_SPI4 | AF6_SPI5 => 0x06,
+            AF7_SPI3  | AF7_USART1 | AF7_USART2          => 0x07,
+            AF8_USART6                                   => 0x08,
+            AF9_TIM14 | AF9_I2C2   | AF9_I2C3            => 0x09,
         }
+    }
+}
+
+pub struct GPIOConfig {
+    mode: GPIO_Mode,
+    speed: GPIO_Speed,
+    otype: GPIO_OutputType,
+    pupd: GPIO_PuPd,
+    af: GPIO_AF
+}
+
+impl GPIOConfig {
+    pub fn new(m: GPIO_Mode, p: GPIO_PuPd) -> GPIOConfig {
+        GPIOConfig {
+            mode: m,
+            speed: GPIO_Speed::HIGH_50MHZ,
+            otype: GPIO_OutputType::PP,
+            pupd: p,
+            af: GPIO_AF::NONE,
+        }
+    }
+
+    pub fn new_af(af: GPIO_AF) -> GPIOConfig {
+        let config = GPIOConfig::new(GPIO_Mode::AF, GPIO_PuPd::NOPULL);
+        config.af = af;
+        config
     }
 }
 
@@ -102,44 +105,23 @@ macro_rules! setup_pin {
         pub struct $pin_num;
 
         impl $pin_num {
-        // let clear_register_value = !((0xF as u32) << (($physical_pin as u32) & (0x07 as u32)) * 4);
-            pub fn af_init(&self, gpio_af: GPIO_AF, rcc: &RCC, gpiox: &$GPIOx) {
-                self.init(GPIO_Mode::AF, GPIO_PuPd::NOPULL, rcc, gpiox);
-                let af_val = gpio_af.af_to_val();
-                unsafe { gpiox.$afr.write(|w| w.$afr_num().bits(af_val as u8)); }
-            }
-            pub fn init(&self, pin_mode: GPIO_Mode, pin_pupd: GPIO_PuPd, rcc: &RCC, gpiox: &$GPIOx) {
+            // pub fn af_init(&self, config: &GPIOConfig, rcc: &RCC, gpiox: &$GPIOx) {
+            //     self.init(config, rcc, gpiox);
+            //     let af_val = config.af.af_to_val();
+            //     unsafe { gpiox.$afr.write(|w| w.$afr_num().bits(af_val as u8)); }
+            // }
+            pub fn init(&self, config: &GPIOConfig, rcc: &RCC, gpiox: &$GPIOx) {
                 rcc.ahb1enr.modify(|_, w| w.$rcc_enable().set_bit());
-                // NOTE: Not actually unsafe. Writes are atomic.
-                unsafe {
-                    match pin_mode {
-                        GPIO_Mode::IN => {
-                            gpiox.moder.write(|w| w.$moder().bits(0x00));
-                        },
-                        GPIO_Mode::OUT => {
-                            gpiox.moder.write(|w| w.$moder().bits(0x01));
-                        },
-                        GPIO_Mode::AN => {
-                            gpiox.moder.write(|w| w.$moder().bits(0x02));
-                        },
-                        GPIO_Mode::AF => {
-                            gpiox.moder.write(|w| w.$moder().bits(0x03));
-                        }
-                    };
-                    match pin_pupd {
-                        GPIO_PuPd::NOPULL => {
-                            gpiox.pupdr.write(|w| w.$pupdr().bits(0x00));
-                        },
-                        GPIO_PuPd::UP => {
-                            gpiox.pupdr.write(|w| w.$pupdr().bits(0x01));
-                        },
-                        GPIO_PuPd::DOWN => {
-                            gpiox.pupdr.write(|w| w.$pupdr().bits(0x02));
-                        }
-                    };
-                    gpiox.ospeedr.write(|w| w.$ospeedr().bits(0x02));
+                unsafe { // NOTE: Actually safe. Writes are atomic.
+                    gpiox.moder.write(|w| w.$moder().bits(config.mode as u8));
+                    gpiox.pupdr.write(|w| w.$pupdr().bits(config.pupd as u8));
+                    gpiox.ospeedr.write(|w| w.$ospeedr().bits(config.speed as u8));
+                    match config.af {
+                        GPIO_AF::NONE => {},
+                        _ => {gpiox.$afr.write(|w| w.$afr_num().bits(config.af.af_to_val()))}
+                    }
                 }
-                gpiox.otyper.write(|w| w.$otyper().bit(false));
+                gpiox.otyper.write(|w| w.$otyper().bit(config.otype as u8 != 0x00));
             }
 
             pub fn read(&self, gpiox: &$GPIOx) -> bool {
@@ -163,24 +145,27 @@ setup_pin!(PA2, 2, GPIOA, gpioaen, moder2, pupdr2, ospeedr2, ot2, bs2, br2, afrl
 setup_pin!(PA5, 5, GPIOA, gpioaen, moder5, pupdr5, ospeedr5, ot5, bs5, br5, afrl, afrl5);
 setup_pin!(PA6, 6, GPIOA, gpioaen, moder6, pupdr6, ospeedr6, ot6, bs6, br6, afrl, afrl6);
 setup_pin!(PA7, 7, GPIOA, gpioaen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
+setup_pin!(PA11, 11, GPIOA, gpioaen, moder11, pupdr11, ospeedr11, ot11, bs11, br11, afrh, afrh11);
 setup_pin!(PB10, 10, GPIOB, gpioben, moder10, pupdr10, ospeedr10, ot10, bs10, br10, afrh, afrh10);
+setup_pin!(PB13, 13, GPIOB, gpioben, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
 setup_pin!(PB14, 14, GPIOB, gpioben, moder14, pupdr14, ospeedr14, ot14, bs14, br14, afrh, afrh14);
 setup_pin!(PC7, 7, GPIOC, gpiocen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
 
 enum ADC_Mode {
-    ADC_Mode_Independent,
-    ADC_DualMode_RegSimult_InjecSimult,
-    ADC_DualMode_RegSimult_AlterTrig,
-    ADC_DualMode_InjecSimult,
-    ADC_DualMode_RegSimult,
-    ADC_DualMode_Interl,
-    ADC_DualMode_AlterTrig,
-    ADC_TripleMode_RegSimult_InjecSimult,
-    ADC_TripleMode_RegSimult_AlterTrig,
-    ADC_TripleMode_InjecSimult,
-    ADC_TripleMode_RegSimult,
-    ADC_TripleMode_Interl,
-    ADC_TripleMode_AlterTrig,
+    ADC_Mode_Independent                    = 0x00,
+    // TODO: all other modes not supported
+    ADC_DualMode_RegSimult_InjecSimult      = 0x01,
+    ADC_DualMode_RegSimult_AlterTrig        = 0x02,
+    ADC_DualMode_InjecSimult                = 0x05,
+    ADC_DualMode_RegSimult                  = 0x06,
+    ADC_DualMode_Interl                     = 0x07,
+    ADC_DualMode_AlterTrig                  = 0x09,
+    ADC_TripleMode_RegSimult_InjecSimult    = 0x11,
+    ADC_TripleMode_RegSimult_AlterTrig      = 0x12,
+    ADC_TripleMode_InjecSimult              = 0x15,
+    ADC_TripleMode_RegSimult                = 0x16,
+    ADC_TripleMode_Interl                   = 0x17,
+    ADC_TripleMode_AlterTrig                = 0x19,
 }
 
 enum ADC_Prescaler {
@@ -216,6 +201,24 @@ enum ADC_TwoSampleDelay {
     ADC_TwoSamplingDelay_20Cycles
 }
 
+struct ADCConfig {
+    adc_mode: ADC_Mode,
+    adc_prescaler: ADC_Prescaler,
+    adc_dma: ADC_DMAMode,
+    adc_twosample: ADC_TwoSampleDelay,
+}
+
+impl ADCConfig {
+    fn new() -> ADCConfig {
+        ADCConfig {
+            adc_mode: ADC_Mode::ADC_Mode_Independent,
+            adc_prescaler: ADC_Prescaler::ADC_Prescaler_Div2,
+            adc_dma: ADC_DMAMode::ADC_DMAAccessMode_Disabled,
+            adc_twosample: ADC_TwoSampleDelay::ADC_TwoSamplingDelay_5Cycles
+        }
+    }
+}
+
 ///
 /// TODO:
 ///  - Implement other ADC options supported
@@ -224,34 +227,14 @@ enum ADC_TwoSampleDelay {
 /// NOTE: All of these `unsafe` blocks are actually
 /// safe, since they are atomic writes.
 pub fn initialize_adcs(c_adc: &ADC_COMMON, adc1: &ADC1) {
-    let adc_mode = ADC_Mode::ADC_Mode_Independent;
-    let adc_mode = match adc_mode {
-        ADC_Mode::ADC_Mode_Independent => 0x00,
-        _ => 0xFF // Not implemented yet.
-    };
-    let adc_prescale = ADC_Prescaler::ADC_Prescaler_Div2;
-    let adc_prescale = match adc_prescale {
-        ADC_Prescaler::ADC_Prescaler_Div2 => 0x00,
-        ADC_Prescaler::ADC_Prescaler_Div4 => 0x01,
-        ADC_Prescaler::ADC_Prescaler_Div6 => 0x02,
-        ADC_Prescaler::ADC_Prescaler_Div8 => 0x03
-    };
-    let adc_dma = ADC_DMAMode::ADC_DMAAccessMode_Disabled;
-    let adc_dma = match adc_dma {
-        ADC_DMAMode::ADC_DMAAccessMode_Disabled => 0x00,
-        _ => 0xFF // Not implemented yet.
-    };
-    let adc_twosample = ADC_TwoSampleDelay::ADC_TwoSamplingDelay_5Cycles;
-    let adc_twosample = match adc_twosample {
-        ADC_TwoSampleDelay::ADC_TwoSamplingDelay_5Cycles => 0x00,
-        _ => 0xFF // Not implemented yet.
-    };
+    let ref adc_config = ADCConfig::new();
     unsafe {
         // TODO: Figure out why mult() is missing
         // c_adc.ccr.write(|w| w.mult().bits(adc_mode));
-        c_adc.ccr.write(|w| w.adcpre().bits(adc_prescale));
-        c_adc.ccr.write(|w| w.dma().bits(adc_dma));
-        c_adc.ccr.write(|w| w.delay().bits(adc_twosample));
+        c_adc.ccr.modify(|r, w| w.bits((r.bits() & 0x00FF) & adc_config.adc_mode as u32));
+        c_adc.ccr.write(|w| w.adcpre().bits(adc_config.adc_prescaler as u8));
+        c_adc.ccr.write(|w| w.dma().bits(adc_config.adc_dma as u8));
+        c_adc.ccr.write(|w| w.delay().bits(adc_config.adc_twosample as u8));
     }
 
     // ADC1 Initialization
