@@ -4,7 +4,7 @@ name = "f4"
 version = "0.1.0"
 
 [dependencies]
-bare-metal = "0.1.0"
+bare-metal = "0.1.1"
 cortex-m = "0.3.1"
 cortex-m-semihosting = "0.2.0"
 vcell = "0.1.0"
