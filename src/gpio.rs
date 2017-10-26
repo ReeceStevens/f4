@@ -1,5 +1,9 @@
+#![allow(dead_code)]
+#![allow(non_camel_case_types)]
+
 use stm32f40x::{GPIOA, GPIOB, GPIOC, ADC_COMMON, ADC1, RCC};
 
+#[derive(Copy,Clone)]
 pub enum GPIO_Mode {
     IN,
     OUT,
@@ -7,6 +11,7 @@ pub enum GPIO_Mode {
     AF
 }
 
+#[derive(Copy,Clone)]
 pub enum GPIO_Speed {
     LOW_2MHZ,
     MED_25MHZ,
@@ -14,17 +19,20 @@ pub enum GPIO_Speed {
     MAX_100MHZ
 }
 
+#[derive(Copy,Clone)]
 pub enum GPIO_OutputType {
     PP,
     OD
 }
 
+#[derive(Copy,Clone)]
 pub enum GPIO_PuPd {
     NOPULL,
     UP,
     DOWN
 }
 
+#[derive(Copy,Clone)]
 pub enum GPIO_AF {
     NONE,
     AF1_TIM1,
@@ -73,6 +81,7 @@ impl GPIO_AF {
     }
 }
 
+#[derive(Copy,Clone)]
 pub struct GPIOConfig {
     mode: GPIO_Mode,
     speed: GPIO_Speed,
@@ -93,7 +102,7 @@ impl GPIOConfig {
     }
 
     pub fn new_af(af: GPIO_AF) -> GPIOConfig {
-        let config = GPIOConfig::new(GPIO_Mode::AF, GPIO_PuPd::NOPULL);
+        let mut config = GPIOConfig::new(GPIO_Mode::AF, GPIO_PuPd::NOPULL);
         config.af = af;
         config
     }
@@ -151,6 +160,7 @@ setup_pin!(PB13, 13, GPIOB, gpioben, moder13, pupdr13, ospeedr13, ot13, bs13, br
 setup_pin!(PB14, 14, GPIOB, gpioben, moder14, pupdr14, ospeedr14, ot14, bs14, br14, afrh, afrh14);
 setup_pin!(PC7, 7, GPIOC, gpiocen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
 
+#[derive(Copy,Clone)]
 enum ADC_Mode {
     ADC_Mode_Independent                    = 0x00,
     // TODO: all other modes not supported
@@ -168,6 +178,7 @@ enum ADC_Mode {
     ADC_TripleMode_AlterTrig                = 0x19,
 }
 
+#[derive(Copy,Clone)]
 enum ADC_Prescaler {
     ADC_Prescaler_Div2,
     ADC_Prescaler_Div4,
@@ -175,6 +186,7 @@ enum ADC_Prescaler {
     ADC_Prescaler_Div8
 }
 
+#[derive(Copy,Clone)]
 enum ADC_DMAMode {
     ADC_DMAAccessMode_Disabled,
     ADC_DMAAccessMode_1,
@@ -182,6 +194,7 @@ enum ADC_DMAMode {
     ADC_DMAAccessMode_3
 }
 
+#[derive(Copy,Clone)]
 enum ADC_TwoSampleDelay {
     ADC_TwoSamplingDelay_5Cycles,
     ADC_TwoSamplingDelay_6Cycles,
@@ -201,6 +214,7 @@ enum ADC_TwoSampleDelay {
     ADC_TwoSamplingDelay_20Cycles
 }
 
+#[derive(Copy,Clone)]
 struct ADCConfig {
     adc_mode: ADC_Mode,
     adc_prescaler: ADC_Prescaler,
@@ -231,7 +245,7 @@ pub fn initialize_adcs(c_adc: &ADC_COMMON, adc1: &ADC1) {
     unsafe {
         // TODO: Figure out why mult() is missing
         // c_adc.ccr.write(|w| w.mult().bits(adc_mode));
-        c_adc.ccr.modify(|r, w| w.bits((r.bits() & 0x00FF) & adc_config.adc_mode as u32));
+        c_adc.ccr.modify(|r, w| w.bits((r.bits() & 0x00FF) & (adc_config.adc_mode as u32)));
         c_adc.ccr.write(|w| w.adcpre().bits(adc_config.adc_prescaler as u8));
         c_adc.ccr.write(|w| w.dma().bits(adc_config.adc_dma as u8));
         c_adc.ccr.write(|w| w.delay().bits(adc_config.adc_twosample as u8));

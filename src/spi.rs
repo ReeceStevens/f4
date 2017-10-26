@@ -1,4 +1,5 @@
-// use stm32f40x::{SPI1, SPI2, SPI3};
+#![allow(dead_code)]
+
 use stm32f40x::{SpiRegisters, SPI1, SPI2, SPI4, GPIOA, GPIOB, GPIOC, RCC};
 use gpio::{GPIO_AF, GPIOConfig};
 use gpio::{PA5, PA6, PA7, PB10, PB14,

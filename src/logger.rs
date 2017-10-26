@@ -2,6 +2,7 @@ use core::fmt;
 use core::fmt::Write;
 pub use cortex_m_semihosting::hio as hio;
 
+#[allow(non_camel_case_types)]
 pub enum LogLevel {
     l_info,
     l_warn,
