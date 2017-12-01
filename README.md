@@ -17,5 +17,8 @@ The primary goals of the `f4` crate are:
 - to provide useful debugging tools and informative error messages
 - to provide an interface that is as close as possible to idiomatic Rust
 
+Please note that, in its current state, this crate does not yet accomplish
+these goals!
+
 [svd2rust]: https://github.com/japaric/svd2rust
 [rtfm]: https://github.com/japaric/cortex-m-rtfm
