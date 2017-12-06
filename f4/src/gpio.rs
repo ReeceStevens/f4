@@ -155,18 +155,18 @@ macro_rules! setup_pin {
                 }
             }
 
-            pub fn init(config: &GPIOConfig, rcc: &RCC, gpiox: &$GPIOx) {
+            pub fn init(config: GPIOConfig, rcc: &RCC, gpiox: &$GPIOx) {
                 rcc.ahb1enr.modify(|_, w| w.$rcc_enable().set_bit());
                 unsafe { // NOTE: Actually safe. Writes are atomic.
-                    gpiox.moder.write(|w| w.$moder().bits(config.mode as u8));
-                    gpiox.pupdr.write(|w| w.$pupdr().bits(config.pupd as u8));
-                    gpiox.ospeedr.write(|w| w.$ospeedr().bits(config.speed as u8));
+                    gpiox.moder.modify(|_, w| w.$moder().bits(config.mode as u8));
+                    gpiox.pupdr.modify(|_, w| w.$pupdr().bits(config.pupd as u8));
+                    gpiox.ospeedr.modify(|_, w| w.$ospeedr().bits(config.speed as u8));
                     match config.af {
                         GPIO_AF::NONE => {},
-                        _ => {gpiox.$afr.write(|w| w.$afr_num().bits(config.af.af_to_val()))}
+                        _ => {gpiox.$afr.modify(|_, w| w.$afr_num().bits(config.af.af_to_val()))}
                     }
                 }
-                gpiox.otyper.write(|w| w.$otyper().bit(config.otype as u8 != 0x00));
+                gpiox.otyper.modify(|_, w| w.$otyper().bit(config.otype as u8 != 0x00));
             }
 
             pub fn read(&self) -> bool {
