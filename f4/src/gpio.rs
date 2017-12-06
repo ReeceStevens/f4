@@ -1,7 +1,37 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
+/// Defines the GPIO pins and ADC structures.
+///
+/// Example: Toggle a GPIO pin
+///
+/// ```rs
+/// use f4::stm32f40x::{GPIOA, RCC};
+/// use f4::gpio::{PA1, GPIOConfig, GPIOMode, GPIO_PuPd};
+///
+/// let config = GPIOConfig::new(GPIOMode::OUT, GPIO_PuPd::UP);
+/// PA1::init(&config, &RCC, &GPIOA);
+/// let pin = PA1::get_reference(&GPIOA);
+///
+/// pin.set_high();
+/// pin.set_low();
+/// ```
+///
+/// Example: Read a GPIO pin
+///
+/// ```rs
+/// use f4::stm32f40x::{GPIOA, RCC};
+/// use f4::gpio::{PA1, GPIOConfig, GPIOMode, GPIO_PuPd};
+///
+/// let config = GPIOConfig::new(GPIO_Mode::IN, GPIO_PuPd::NOPULL);
+/// PA1::init(&config, &RCC, &GPIOA);
+/// let pin = PA1::get_reference(&GPIOA);
+///
+/// let status: bool = pin.read();
+/// ```
 
-use stm32f40x::{GPIOA, GPIOB, GPIOC, ADC_COMMON, ADC1, RCC};
+use stm32f40x::{GPIOA, GPIOB, GPIOC, GPIOD,
+                ADC_COMMON, ADC1, RCC};
+use stm32f40x;
 
 #[derive(Copy,Clone)]
 pub enum GPIO_Mode {
@@ -109,17 +139,23 @@ impl GPIOConfig {
 }
 
 macro_rules! setup_pin {
-    ($pin_num:ident, $physical_pin:expr, $GPIOx:ty, $rcc_enable:ident,
-     $moder:ident, $pupdr:ident, $ospeedr:ident, $otyper:ident, $bsx:ident, $brx:ident, $afr:ident, $afr_num:ident) => {
-        pub struct $pin_num;
+    ($pin_num:ident, $physical_pin:expr, $GPIOx:ty, $gpio_mod:ident, $rcc_enable:ident, $moder:ident, $pupdr:ident, $ospeedr:ident, $otyper:ident, $bsx:ident,
+     $brx:ident, $afr:ident, $afr_num:ident) => {
 
-        impl $pin_num {
-            // pub fn af_init(&self, config: &GPIOConfig, rcc: &RCC, gpiox: &$GPIOx) {
-            //     self.init(config, rcc, gpiox);
-            //     let af_val = config.af.af_to_val();
-            //     unsafe { gpiox.$afr.write(|w| w.$afr_num().bits(af_val as u8)); }
-            // }
-            pub fn init(&self, config: &GPIOConfig, rcc: &RCC, gpiox: &$GPIOx) {
+        pub struct $pin_num<'a> {
+            bsrr: &'a stm32f40x::$gpio_mod::BSRR,
+            idr: &'a stm32f40x::$gpio_mod::IDR
+        }
+
+        impl<'a> $pin_num<'a> {
+            pub fn get_reference(gpiox: &$GPIOx) -> $pin_num{
+                $pin_num {
+                    bsrr: &gpiox.bsrr,
+                    idr: &gpiox.idr
+                }
+            }
+
+            pub fn init(config: &GPIOConfig, rcc: &RCC, gpiox: &$GPIOx) {
                 rcc.ahb1enr.modify(|_, w| w.$rcc_enable().set_bit());
                 unsafe { // NOTE: Actually safe. Writes are atomic.
                     gpiox.moder.write(|w| w.$moder().bits(config.mode as u8));
@@ -133,32 +169,34 @@ macro_rules! setup_pin {
                 gpiox.otyper.write(|w| w.$otyper().bit(config.otype as u8 != 0x00));
             }
 
-            pub fn read(&self, gpiox: &$GPIOx) -> bool {
-                gpiox.idr.read().bits() & (0x01 << $physical_pin) != 0
+            pub fn read(&self) -> bool {
+                self.idr.read().bits() & (0x01 << $physical_pin) != 0
             }
 
-            pub fn set_high(&self, gpiox: &$GPIOx) {
-                gpiox.bsrr.write(|w| w.$bsx().bit(true));
+            pub fn set_high(&self) {
+                self.bsrr.write(|w| w.$bsx().bit(true));
             }
 
-            pub fn set_low(&self, gpiox: &$GPIOx) {
-                gpiox.bsrr.write(|w| w.$brx().bit(true));
+            pub fn set_low(&self) {
+                self.bsrr.write(|w| w.$brx().bit(true));
             }
         }
     }
 }
 
 // Declare all pins used here!
-setup_pin!(PA1, 1, GPIOA, gpioaen, moder1, pupdr1, ospeedr1, ot1, bs1, br1, afrl, afrl1);
-setup_pin!(PA2, 2, GPIOA, gpioaen, moder2, pupdr2, ospeedr2, ot2, bs2, br2, afrl, afrl2);
-setup_pin!(PA5, 5, GPIOA, gpioaen, moder5, pupdr5, ospeedr5, ot5, bs5, br5, afrl, afrl5);
-setup_pin!(PA6, 6, GPIOA, gpioaen, moder6, pupdr6, ospeedr6, ot6, bs6, br6, afrl, afrl6);
-setup_pin!(PA7, 7, GPIOA, gpioaen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
-setup_pin!(PA11, 11, GPIOA, gpioaen, moder11, pupdr11, ospeedr11, ot11, bs11, br11, afrh, afrh11);
-setup_pin!(PB10, 10, GPIOB, gpioben, moder10, pupdr10, ospeedr10, ot10, bs10, br10, afrh, afrh10);
-setup_pin!(PB13, 13, GPIOB, gpioben, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
-setup_pin!(PB14, 14, GPIOB, gpioben, moder14, pupdr14, ospeedr14, ot14, bs14, br14, afrh, afrh14);
-setup_pin!(PC7, 7, GPIOC, gpiocen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
+setup_pin!(PA1, 1, GPIOA, gpioa, gpioaen, moder1, pupdr1, ospeedr1, ot1, bs1, br1, afrl, afrl1);
+setup_pin!(PA2, 2, GPIOA, gpioa, gpioaen, moder2, pupdr2, ospeedr2, ot2, bs2, br2, afrl, afrl2);
+setup_pin!(PA5, 5, GPIOA, gpioa, gpioaen, moder5, pupdr5, ospeedr5, ot5, bs5, br5, afrl, afrl5);
+setup_pin!(PA6, 6, GPIOA, gpioa, gpioaen, moder6, pupdr6, ospeedr6, ot6, bs6, br6, afrl, afrl6);
+setup_pin!(PA7, 7, GPIOA, gpioa, gpioaen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
+setup_pin!(PA11, 11, GPIOA, gpioa, gpioaen, moder11, pupdr11, ospeedr11, ot11, bs11, br11, afrh, afrh11);
+setup_pin!(PB10, 10, GPIOB, gpiob, gpioben, moder10, pupdr10, ospeedr10, ot10, bs10, br10, afrh, afrh10);
+setup_pin!(PB13, 13, GPIOB, gpiob, gpioben, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
+setup_pin!(PB14, 14, GPIOB, gpiob, gpioben, moder14, pupdr14, ospeedr14, ot14, bs14, br14, afrh, afrh14);
+setup_pin!(PC7, 7, GPIOC, gpioh, gpiocen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
+setup_pin!(PD13, 13, GPIOD, gpioh, gpioden, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
+setup_pin!(PD15, 15, GPIOD, gpioh, gpioden, moder15, pupdr15, ospeedr15, ot15, bs15, br15, afrh, afrh15);
 
 #[derive(Copy,Clone)]
 enum ADC_Mode {
