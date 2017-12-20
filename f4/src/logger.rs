@@ -1,5 +1,5 @@
-use core::fmt;
-use core::fmt::Write;
+// use core::fmt;
+// use core::fmt::Write;
 pub use cortex_m_semihosting::hio as hio;
 
 #[allow(non_camel_case_types)]
@@ -28,8 +28,8 @@ macro_rules! logger {
             LogLevel::l_error => "ERROR",
             LogLevel::l_fatal => "FATAL",
         };
-        stdout.write_fmt(format_args!("{}{} |\t\t", log_color, log_name));
-        stdout.write_fmt(format_args!($($arg)*));
-        stdout.write_fmt(format_args!("\n"));
+        stdout.write_fmt(format_args!("{}{} |\t\t", log_color, log_name)).unwrap();
+        stdout.write_fmt(format_args!($($arg)*)).unwrap();
+        stdout.write_fmt(format_args!("\n")).unwrap();
     };
 }

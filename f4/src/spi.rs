@@ -5,23 +5,29 @@ use gpio::{GPIO_AF, GPIOConfig};
 use gpio::{PA5, PA6, PA7, PB10, PB14,
            PC7, PB13, PA11, PA1};
 
-pub enum SPI {
-    SPI1,
-    SPI2,
-    SPI3
+use stm32f40x::i2s2ext;
+
+pub struct Spi1<'a> {
+    dr: &'a i2s2ext::DR,
+    sr: &'a i2s2ext::SR
 }
 
-pub struct Spi1;
-impl Spi1 {
-    fn config(spi1: &SPI1, gpioa: &GPIOA, rcc: &RCC) {
+impl<'a> Spi1<'a> {
+    pub fn init(spi1: &SPI1, rcc: &RCC, gpioa: &GPIOA) {
         rcc.apb2enr.write(|w| w.spi1en().set_bit());
         let config = GPIOConfig::new_af(GPIO_AF::AF5_SPI1);
-        PA5.init(&config, rcc, gpioa);
-        PA6.init(&config, rcc, gpioa);
-        PA7.init(&config, rcc, gpioa);
+        PA5::init(config, rcc, gpioa);
+        PA6::init(config, rcc, gpioa);
+        PA7::init(config, rcc, gpioa);
         channel_config(&spi1);
     }
-    fn enable(spi1: &SPI1) {
+    pub fn get_reference(spi1: &SPI1) -> Spi1 {
+        Spi1 {
+            dr: &spi1.dr,
+            sr: &spi1.sr
+        }
+    }
+    pub fn enable(spi1: &SPI1) {
         spi1.cr1.write(|w| w.spe().set_bit());
     }
 }
@@ -31,9 +37,9 @@ impl Spi2 {
     fn config(&self, spi2: &SPI2, gpiob: &GPIOB, gpioc: &GPIOC, rcc: &RCC) {
         rcc.apb1enr.write(|w| w.spi2en().set_bit());
         let config = GPIOConfig::new_af(GPIO_AF::AF5_SPI1);
-        PC7.init(&config, rcc, gpioc);
-        PB14.init(&config, rcc, gpiob);
-        PB10.init(&config, rcc, gpiob);
+        PC7::init(config, rcc, gpioc);
+        PB14::init(config, rcc, gpiob);
+        PB10::init(config, rcc, gpiob);
         channel_config(&spi2);
     }
     fn enable(&self, spi2: &SPI2) {
@@ -46,10 +52,10 @@ impl Spi4 {
     fn config(&self, spi4: &SPI4, gpioa: &GPIOA, gpiob: &GPIOB, rcc: &RCC) {
         rcc.apb2enr.write(|w| w.spi4en().set_bit());
         let config = GPIOConfig::new_af(GPIO_AF::AF6_SPI4);
-        PB13.init(&config, rcc, gpiob);
-        PA11.init(&config, rcc, gpioa);
+        PB13::init(config, rcc, gpiob);
+        PA11::init(config, rcc, gpioa);
         let config = GPIOConfig::new_af(GPIO_AF::AF5_SPI4);
-        PA1.init(&config, rcc, gpioa);
+        PA1::init(config, rcc, gpioa);
         channel_config(&spi4);
     }
     fn enable(&self, spi4: &SPI4) {
@@ -87,10 +93,13 @@ fn channel_config(spi_channel: &SpiRegisters) {
     unsafe { spi_channel.crcpr.write(|w| w.crcpoly().bits(7)); }
 }
 
-pub fn transfer(data: u8, spix: &SpiRegisters) -> u8 {
-    unsafe { spix.dr.write(|w| w.bits(data as u32)); }
-    while spix.sr.read().txe().bit_is_clear() {}; // Wait until transmit complete
-    while spix.sr.read().rxne().bit_is_clear() {}; // wait until receive complete
-    while spix.sr.read().bsy().bit_is_set() {}; // Wait until SPI is not busy
-    spix.dr.read().bits() as u8
+// TODO: Generalize to all SPI peripherals
+impl<'a> Spi1<'a> {
+    pub fn transfer(&self, data: u8) -> u8 {
+        unsafe { self.dr.write(|w| w.bits(data as u32)); }
+        while self.sr.read().txe().bit_is_clear() {}; // Wait until transmit complete
+        while self.sr.read().rxne().bit_is_clear() {}; // wait until receive complete
+        while self.sr.read().bsy().bit_is_set() {}; // Wait until SPI is not busy
+        self.dr.read().bits() as u8
+    }
 }

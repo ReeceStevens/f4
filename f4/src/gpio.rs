@@ -195,7 +195,9 @@ setup_pin!(PB10, 10, GPIOB, gpiob, gpioben, moder10, pupdr10, ospeedr10, ot10, b
 setup_pin!(PB13, 13, GPIOB, gpiob, gpioben, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
 setup_pin!(PB14, 14, GPIOB, gpiob, gpioben, moder14, pupdr14, ospeedr14, ot14, bs14, br14, afrh, afrh14);
 setup_pin!(PC7, 7, GPIOC, gpioh, gpiocen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
+setup_pin!(PD12, 12, GPIOD, gpioh, gpioden, moder12, pupdr12, ospeedr12, ot12, bs12, br12, afrh, afrh12);
 setup_pin!(PD13, 13, GPIOD, gpioh, gpioden, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
+setup_pin!(PD14, 14, GPIOD, gpioh, gpioden, moder14, pupdr14, ospeedr14, ot14, bs14, br14, afrh, afrh14);
 setup_pin!(PD15, 15, GPIOD, gpioh, gpioden, moder15, pupdr15, ospeedr15, ot15, bs15, br15, afrh, afrh15);
 
 #[derive(Copy,Clone)]
