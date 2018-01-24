@@ -37,8 +37,8 @@ use stm32f40x;
 pub enum GPIO_Mode {
     IN,
     OUT,
-    AN,
-    AF
+    AF,
+    AN
 }
 
 #[derive(Copy,Clone)]
@@ -94,7 +94,7 @@ pub enum GPIO_AF {
 }
 
 impl GPIO_AF {
-    fn af_to_val(&self) -> u8 {
+    pub fn af_to_val(&self) -> u8 {
         use self::GPIO_AF::*;
         match *self {
             NONE                                         => 0x00,
@@ -113,11 +113,11 @@ impl GPIO_AF {
 
 #[derive(Copy,Clone)]
 pub struct GPIOConfig {
-    mode: GPIO_Mode,
-    speed: GPIO_Speed,
-    otype: GPIO_OutputType,
-    pupd: GPIO_PuPd,
-    af: GPIO_AF
+    pub mode: GPIO_Mode,
+    pub speed: GPIO_Speed,
+    pub otype: GPIO_OutputType,
+    pub pupd: GPIO_PuPd,
+    pub af: GPIO_AF
 }
 
 impl GPIOConfig {
@@ -132,7 +132,7 @@ impl GPIOConfig {
     }
 
     pub fn new_af(af: GPIO_AF) -> GPIOConfig {
-        let mut config = GPIOConfig::new(GPIO_Mode::AF, GPIO_PuPd::NOPULL);
+        let mut config = GPIOConfig::new(GPIO_Mode::AF, GPIO_PuPd::UP);
         config.af = af;
         config
     }
@@ -190,6 +190,8 @@ setup_pin!(PA2, 2, GPIOA, gpioa, gpioaen, moder2, pupdr2, ospeedr2, ot2, bs2, br
 setup_pin!(PA5, 5, GPIOA, gpioa, gpioaen, moder5, pupdr5, ospeedr5, ot5, bs5, br5, afrl, afrl5);
 setup_pin!(PA6, 6, GPIOA, gpioa, gpioaen, moder6, pupdr6, ospeedr6, ot6, bs6, br6, afrl, afrl6);
 setup_pin!(PA7, 7, GPIOA, gpioa, gpioaen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
+setup_pin!(PA9, 9, GPIOA, gpioa, gpioaen, moder9, pupdr9, ospeedr9, ot9, bs9, br9, afrh, afrh9);
+setup_pin!(PA15, 15, GPIOA, gpioa, gpioaen, moder15, pupdr15, ospeedr15, ot15, bs15, br15, afrh, afrh15);
 setup_pin!(PA11, 11, GPIOA, gpioa, gpioaen, moder11, pupdr11, ospeedr11, ot11, bs11, br11, afrh, afrh11);
 setup_pin!(PB10, 10, GPIOB, gpiob, gpioben, moder10, pupdr10, ospeedr10, ot10, bs10, br10, afrh, afrh10);
 setup_pin!(PB13, 13, GPIOB, gpiob, gpioben, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
@@ -280,7 +282,7 @@ impl ADCConfig {
 ///
 /// NOTE: All of these `unsafe` blocks are actually
 /// safe, since they are atomic writes.
-pub fn initialize_adcs(c_adc: &ADC_COMMON, adc1: &ADC1) {
+pub fn initialize_adcs(rcc: &RCC, c_adc: &ADC_COMMON, adc1: &ADC1) {
     let ref adc_config = ADCConfig::new();
     unsafe {
         // TODO: Figure out why mult() is missing
@@ -293,9 +295,8 @@ pub fn initialize_adcs(c_adc: &ADC_COMMON, adc1: &ADC1) {
 
     // ADC1 Initialization
     unsafe {
-        let rcc = &(*RCC.get());
-        rcc.apb2enr.write(|w| w.adc1en().set_bit());
-        adc1.cr1.write(|w| w.res().bits(0x00)); 
+        rcc.apb2enr.modify(|_, w| w.adc1en().set_bit());
+        adc1.cr1.modify(|_, w| w.res().bits(0x00)); 
     }
     adc1.cr1.write(|w| w.scan().clear_bit());
     // Clear all relevant bits in cr2

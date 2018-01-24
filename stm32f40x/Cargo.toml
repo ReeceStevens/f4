@@ -5,12 +5,12 @@ version = "0.1.0"
 
 [dependencies]
 bare-metal = "0.1.1"
-cortex-m = "0.3.1"
+cortex-m = "0.4.2"
 vcell = "0.1.0"
 
 [dependencies.cortex-m-rt]
 optional = true
-version = "0.3.0"
+version = "0.3.12"
 
 [features]
 rt = ["cortex-m-rt"]

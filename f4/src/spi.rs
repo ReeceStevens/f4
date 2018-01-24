@@ -7,6 +7,10 @@ use gpio::{PA5, PA6, PA7, PB10, PB14,
 
 use stm32f40x::i2s2ext;
 
+pub trait Spi {
+    fn transfer(&self, data: u8) -> u8;
+}
+
 pub struct Spi1<'a> {
     dr: &'a i2s2ext::DR,
     sr: &'a i2s2ext::SR
@@ -30,7 +34,11 @@ impl<'a> Spi1<'a> {
     pub fn enable(spi1: &SPI1) {
         spi1.cr1.modify(|_, w| w.spe().set_bit());
     }
-    pub fn transfer(&self, data: u8) -> u8 {
+}
+
+//TODO: this isn't public for some reason?
+impl<'a> Spi for Spi1<'a> {
+    fn transfer(&self, data: u8) -> u8 {
         while self.sr.read().txe().bit_is_clear() {}; // Tx buffer should be empty before we begin
         unsafe { self.dr.write(|w| w.bits(data as u32)); }
         while self.sr.read().txe().bit_is_clear() {}; // Wait until transmit complete
@@ -63,7 +71,10 @@ impl<'a> Spi2<'a> {
     pub fn enable(spi2: &SPI2) {
         spi2.cr1.modify(|_, w| w.spe().set_bit());
     }
-    pub fn transfer(&self, data: u8) -> u8 {
+}
+
+impl<'a> Spi for Spi2<'a> {
+    fn transfer(&self, data: u8) -> u8 {
         while self.sr.read().txe().bit_is_clear() {}; // Tx buffer should be empty before we begin
         unsafe { self.dr.write(|w| w.bits(data as u32)); }
         while self.sr.read().txe().bit_is_clear() {}; // Wait until transmit complete
@@ -97,7 +108,10 @@ impl<'a> Spi4<'a> {
     pub fn enable(spi4: &SPI4) {
         spi4.cr1.modify(|_, w| w.spe().set_bit());
     }
-    pub fn transfer(&self, data: u8) -> u8 {
+}
+
+impl<'a> Spi for Spi4<'a> {
+    fn transfer(&self, data: u8) -> u8 {
         while self.sr.read().txe().bit_is_clear() {}; // Tx buffer should be empty before we begin
         unsafe { self.dr.write(|w| w.bits(data as u32)); }
         while self.sr.read().txe().bit_is_clear() {}; // Wait until transmit complete
