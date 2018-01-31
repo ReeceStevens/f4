@@ -1,40 +1,38 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
-/// Defines the GPIO pins and ADC structures.
-///
-/// Example: Toggle a GPIO pin
-///
-/// ```rs
-/// use f4::stm32f40x::{GPIOA, RCC};
-/// use f4::gpio::{PA1, GPIOConfig, GPIOMode, GPIO_PuPd};
-///
-/// let config = GPIOConfig::new(GPIOMode::OUT, GPIO_PuPd::UP);
-/// PA1::init(&config, &RCC, &GPIOA);
-/// let pin = PA1::get_reference(&GPIOA);
-///
-/// pin.set_high();
-/// pin.set_low();
-/// ```
-///
-/// Example: Read a GPIO pin
-///
-/// ```rs
-/// use f4::stm32f40x::{GPIOA, RCC};
-/// use f4::gpio::{PA1, GPIOConfig, GPIOMode, GPIO_PuPd};
-///
-/// let config = GPIOConfig::new(GPIO_Mode::IN, GPIO_PuPd::NOPULL);
-/// PA1::init(&config, &RCC, &GPIOA);
-/// let pin = PA1::get_reference(&GPIOA);
-///
-/// let status: bool = pin.read();
-/// ```
 
-use stm32f40x::{GPIOA, GPIOB, GPIOC, GPIOD,
-                ADC_COMMON, ADC1, RCC};
-use stm32f40x;
+// PhantomData is used to mark the use of a subtype
+use core::marker::PhantomData;
+use stm32f40x::RCC;
+
+pub struct Output<MODE>(PhantomData<MODE>);
+
+pub struct PushPull;
+pub struct OpenDrain;
+
+pub struct Input<MODE>(PhantomData<MODE>);
+
+pub struct Float;
+pub struct Up;
+pub struct Down;
+
+pub struct Analog<MODE>(PhantomData<MODE>);
+
+pub struct AnalogIn;
+pub struct AnalogOut;
+
+pub struct AF1;
+pub struct AF2;
+pub struct AF3;
+pub struct AF4;
+pub struct AF5;
+pub struct AF6;
+pub struct AF7;
+pub struct AF8;
+pub struct AF9;
 
 #[derive(Copy,Clone)]
-pub enum GPIO_Mode {
+pub enum Mode {
     IN,
     OUT,
     AF,
@@ -42,270 +40,290 @@ pub enum GPIO_Mode {
 }
 
 #[derive(Copy,Clone)]
-pub enum GPIO_Speed {
-    LOW_2MHZ,
-    MED_25MHZ,
-    HIGH_50MHZ,
-    MAX_100MHZ
+pub enum PuPd {
+    Float,
+    Up,
+    Down
 }
 
-#[derive(Copy,Clone)]
-pub enum GPIO_OutputType {
-    PP,
-    OD
+pub trait Splittable {
+    type Parts;
+
+    fn split(self, rcc: &RCC) -> Parts;
 }
 
-#[derive(Copy,Clone)]
-pub enum GPIO_PuPd {
-    NOPULL,
-    UP,
-    DOWN
-}
-
-#[derive(Copy,Clone)]
-pub enum GPIO_AF {
-    NONE,
-    AF1_TIM1,
-    AF1_TIM2,
-    AF2_TIM3,
-    AF2_TIM4,
-    AF2_TIM5,
-    AF3_TIM9,
-    AF3_TIM10,
-    AF3_TIM11,
-    AF4_I2C1,
-    AF4_I2C2,
-    AF4_I2C3,
-    AF5_SPI1,
-    AF5_SPI2,
-    AF5_SPI3,
-    AF5_SPI4,
-    AF6_SPI2,
-    AF6_SPI3,
-    AF6_SPI4,
-    AF6_SPI5,
-    AF7_SPI3,
-    AF7_USART1,
-    AF7_USART2,
-    AF8_USART6,
-    AF9_TIM14,
-    AF9_I2C2,
-    AF9_I2C3
-}
-
-impl GPIO_AF {
-    pub fn af_to_val(&self) -> u8 {
-        use self::GPIO_AF::*;
-        match *self {
-            NONE                                         => 0x00,
-            AF1_TIM1  | AF1_TIM2                         => 0x01,
-            AF2_TIM3  | AF2_TIM4   | AF2_TIM5            => 0x02,
-            AF3_TIM9  | AF3_TIM10  | AF3_TIM11           => 0x03,
-            AF4_I2C1  | AF4_I2C2   | AF4_I2C3            => 0x04,
-            AF5_SPI1  | AF5_SPI2   | AF5_SPI3 | AF5_SPI4 => 0x05,
-            AF6_SPI2  | AF6_SPI3   | AF6_SPI4 | AF6_SPI5 => 0x06,
-            AF7_SPI3  | AF7_USART1 | AF7_USART2          => 0x07,
-            AF8_USART6                                   => 0x08,
-            AF9_TIM14 | AF9_I2C2   | AF9_I2C3            => 0x09,
-        }
-    }
-}
-
-#[derive(Copy,Clone)]
-pub struct GPIOConfig {
-    pub mode: GPIO_Mode,
-    pub speed: GPIO_Speed,
-    pub otype: GPIO_OutputType,
-    pub pupd: GPIO_PuPd,
-    pub af: GPIO_AF
-}
-
-impl GPIOConfig {
-    pub fn new(m: GPIO_Mode, p: GPIO_PuPd) -> GPIOConfig {
-        GPIOConfig {
-            mode: m,
-            speed: GPIO_Speed::HIGH_50MHZ,
-            otype: GPIO_OutputType::PP,
-            pupd: p,
-            af: GPIO_AF::NONE,
-        }
-    }
-
-    pub fn new_af(af: GPIO_AF) -> GPIOConfig {
-        let mut config = GPIOConfig::new(GPIO_Mode::AF, GPIO_PuPd::UP);
-        config.af = af;
-        config
-    }
-}
-
-macro_rules! setup_pin {
-    ($pin_num:ident, $physical_pin:expr, $GPIOx:ty, $gpio_mod:ident, $rcc_enable:ident, $moder:ident, $pupdr:ident, $ospeedr:ident, $otyper:ident, $bsx:ident,
-     $brx:ident, $afr:ident, $afr_num:ident) => {
-
-        pub struct $pin_num<'a> {
-            bsrr: &'a stm32f40x::$gpio_mod::BSRR,
-            idr: &'a stm32f40x::$gpio_mod::IDR
-        }
-
-        impl<'a> $pin_num<'a> {
-            pub fn get_reference(gpiox: &$GPIOx) -> $pin_num{
-                $pin_num {
-                    bsrr: &gpiox.bsrr,
-                    idr: &gpiox.idr
-                }
+macro_rules! gpio {
+    ($GPIO_BUS:ident, $gpio_module:ident, $gpio_en:ident, $gpio_rst:ident, $PXx:ident, [
+        $($PXi:ident: ($pxi:ident, $i:expr, $StartMode:ty, $AFR:ident, $moder:ident, $pupdr:ident, $ospeedr:ident, $otyper:ident, $afr:ident, $afr_num:ident),)+
+    ]) => {
+        pub struct $gpio_module {
+            use super::*;
+            use stm32f40x::{$GPIO_BUS, $gpio_mod};
+            pub struct Parts {
+                pub moder: MODER,
+                pub pupdr: PUPDR,
+                pub otyper: OTYPER,
+                pub afrl: AFRL,
+                pub afrh: AFRH,
+                $(
+                    pub $pxi: $PXi<$MODE>,
+                )+
             }
 
-            pub fn init(config: GPIOConfig, rcc: &RCC, gpiox: &$GPIOx) {
-                rcc.ahb1enr.modify(|_, w| w.$rcc_enable().set_bit());
-                unsafe { // NOTE: Actually safe. Writes are atomic.
-                    gpiox.moder.modify(|_, w| w.$moder().bits(config.mode as u8));
-                    gpiox.pupdr.modify(|_, w| w.$pupdr().bits(config.pupd as u8));
-                    gpiox.ospeedr.modify(|_, w| w.$ospeedr().bits(config.speed as u8));
-                    match config.af {
-                        GPIO_AF::NONE => {},
-                        _ => {gpiox.$afr.modify(|_, w| w.$afr_num().bits(config.af.af_to_val()))}
+            impl Splittable for $GPIO_BUS {
+                type Parts = Parts;
+
+                fn split(self, rcc: &mut RCC) -> Parts {
+                    rcc.ahb1enr.modify(|_, w| w.$gpio_en().set_bit());
+                    rcc.ahb1enr.modify(|_, w| w.$gpio_rst().set_bit());
+                    rcc.ahb1enr.modify(|_, w| w.$gpio_rst().clear_bit());
+                    Parts {
+                        moder: MODER(),
+                        pupdr: PUPDR(),
+                        otyper: OTYPER(),
+                        afrl: AFRL(),
+                        afrh: AFRH(),
+                        $(
+                            $pxi: $PXi<$StartMode>,
+                        )+
                     }
                 }
-                gpiox.otyper.modify(|_, w| w.$otyper().bit(config.otype as u8 != 0x00));
             }
 
-            pub fn read(&self) -> bool {
-                self.idr.read().bits() & (0x01 << $physical_pin) != 0
+            // References to GPIO Registers
+            pub struct MODER();
+            impl MODER {
+                fn moder(&self) -> $gpio_mod::MODER {
+                    unsafe { &(*$GPIO_BUS).moder }
+                }
             }
 
-            pub fn set_high(&self) {
-                self.bsrr.write(|w| w.$bsx().bit(true));
+            pub struct PUPDR();
+            impl PUPDR {
+                fn pupdr(&self) -> $gpio_mod::PUPDR {
+                    unsafe { &(*$GPIO_BUS).pupdr }
+                }
             }
 
-            pub fn set_low(&self) {
-                self.bsrr.write(|w| w.$brx().bit(true));
+            pub struct OTYPER();
+            impl OTYPER {
+                fn otyper(&self) -> $gpio_mod::OTYPER {
+                    unsafe { &(*$GPIO_BUS).otyper }
+                }
             }
+
+            pub struct AFRL();
+            impl AFRL {
+                fn afrl(&self) -> $gpio_mod::AFRL {
+                    unsafe { &(*$GPIO_BUS).afrl }
+                }
+            }
+
+            pub struct AFRH();
+            impl AFRH {
+                fn afrh(&self) -> $gpio_mod::AFRH {
+                    unsafe { &(*$GPIO_BUS).afrh }
+                }
+            }
+
+            // Generic GPIO pin for this bus
+            pub struct $PXx<MODE> {
+                i: u8,
+                _mode: PhantomData<MODE>
+            }
+
+            // These unsafe functions are a single atomic write operation.
+            impl<MODE> $PXx<Output<MODE>> {
+                fn set_high(&self) {
+                    unsafe { &(*$GPIO_BUS).bssr.write(|w| w.bits(1 << self.i)); }
+                }
+
+                fn set_low(&self) {
+                    unsafe { &(*$GPIO_BUS).bssr.write(|w| w.bits(1 << (self.i + 16))); }
+                }
+            }
+
+            impl<MODE> $PXx<Input<MODE>> {
+                fn read(&self) -> bool {
+                    unsafe { &(*$GPIO_BUS).idr.read().bits() & (1 << self.i) != 0 }
+                }
+            }
+
+            // Specific GPIO pin configurations
+            $(
+                pub struct $PXi<MODE> {
+                    _mode: PhantomData<MODE>
+                }
+
+                impl<MODE> $PXi<Output<MODE>> {
+                    fn set_high(&self) {
+                        unsafe { &(*$GPIO_BUS).bssr.write(|w| w.bits(1 << self.i)); }
+                    }
+
+                    fn set_low(&self) {
+                        unsafe { &(*$GPIO_BUS).bssr.write(|w| w.bits(1 << (self.i + 16))); }
+                    }
+                }
+
+                impl<MODE> $PXi<Input<MODE>> {
+                    fn read(&self) -> bool {
+                        unsafe { &(*$GPIO_BUS).idr.read().bits() & (1 << self.i) != 0 }
+                    }
+                }
+
+                impl<_MODE> $PXi<MODE> {
+                    fn into_af1(self, moder: &mut MODER, afr: &mut $AFRX) -> $PXi<AF1> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afrx().modify(|_, w| unsafe { w.$afr_num().bits(1) });
+                        $PXi<AF1> { _mode: PhantomData }
+                    }
+                    fn into_af2(self, moder: &mut MODER, afr: &mut $AFRX) -> $PXi<AF2> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afrx().modify(|_, w| unsafe { w.$afr_num().bits(2) });
+                        $PXi<AF2> { _mode: PhantomData }
+                    }
+                    fn into_af3(self, moder: &mut MODER, afr: &mut $AFRX) -> $PXi<AF3> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afrx().modify(|_, w| unsafe { w.$afr_num().bits(3) });
+                        $PXi<AF3> { _mode: PhantomData }
+                    }
+                    fn into_af4(self, moder: &mut MODER, afr: &mut $AFRX) -> $PXi<AF4> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afrx().modify(|_, w| unsafe { w.$afr_num().bits(4) });
+                        $PXi<AF4> { _mode: PhantomData }
+                    }
+                    fn into_af5(self, moder: &mut MODER, afr: &mut $AFRX) -> $PXi<AF5> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afrx().modify(|_, w| unsafe { w.$afr_num().bits(5) });
+                        $PXi<AF5> { _mode: PhantomData }
+                    }
+                    fn into_af6(self, moder: &mut MODER, afr: &mut $AFRX) -> $PXi<AF6> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afrx().modify(|_, w| unsafe { w.$afr_num().bits(6) });
+                        $PXi<AF6> { _mode: PhantomData }
+                    }
+                    fn into_af7(self, moder: &mut MODER, afr: &mut $AFRX) -> $PXi<AF7> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afrx().modify(|_, w| unsafe { w.$afr_num().bits(7) });
+                        $PXi<AF7> { _mode: PhantomData }
+                    }
+                    fn into_af8(self, moder: &mut MODER, afr: &mut $AFRX) -> $PXi<AF8> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afrx().modify(|_, w| unsafe { w.$afr_num().bits(8) });
+                        $PXi<AF8> { _mode: PhantomData }
+                    }
+                    fn into_af9(self, moder: &mut MODER, afr: &mut $AFRX) -> $PXi<AF9> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afrx().modify(|_, w| unsafe { w.$afr_num().bits(9) });
+                        $PXi<AF9> { _mode: PhantomData }
+                    }
+
+                    fn into_pushpull_output(self, moder: &mut MODER, otyper: &mut OTYPER) {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::OUT as u8) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi<Output<PushPull>> { _mode: PhantomData }
+                    }
+
+                    fn into_pulldown_input(self, moder: &mut MODER, pupdr: &mut PUPDR) {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::IN as u8) });
+                        pupdr.pupdr().modify(|_, w| unsafe { w.$pupdr().bits(PuPd::Down as u8) });
+                        $PXi<Input<Down>> { _mode: PhantomData }
+                    }
+                    fn into_pullup_input(self, moder: &mut MODER, pupdr: &mut PUPDR) {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::IN as u8) });
+                        pupdr.pupdr().modify(|_, w| unsafe { w.$pupdr().bits(PuPd::Up as u8) });
+                        $PXi<Input<Up>> { _mode: PhantomData }
+                    }
+                    fn into_floating_input(self, moder: &mut MODER, pupdr: &mut PUPDR) {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::IN as u8) });
+                        pupdr.pupdr().modify(|_, w| unsafe { w.$pupdr().bits(PuPd::Float as u8) });
+                        $PXi<Input<Float>> { _mode: PhantomData }
+                    }
+                }
+
+            )+
+
         }
     }
 }
 
-// Declare all pins used here!
-setup_pin!(PA1, 1, GPIOA, gpioa, gpioaen, moder1, pupdr1, ospeedr1, ot1, bs1, br1, afrl, afrl1);
-setup_pin!(PA2, 2, GPIOA, gpioa, gpioaen, moder2, pupdr2, ospeedr2, ot2, bs2, br2, afrl, afrl2);
-setup_pin!(PA5, 5, GPIOA, gpioa, gpioaen, moder5, pupdr5, ospeedr5, ot5, bs5, br5, afrl, afrl5);
-setup_pin!(PA6, 6, GPIOA, gpioa, gpioaen, moder6, pupdr6, ospeedr6, ot6, bs6, br6, afrl, afrl6);
-setup_pin!(PA7, 7, GPIOA, gpioa, gpioaen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
-setup_pin!(PA9, 9, GPIOA, gpioa, gpioaen, moder9, pupdr9, ospeedr9, ot9, bs9, br9, afrh, afrh9);
-setup_pin!(PA15, 15, GPIOA, gpioa, gpioaen, moder15, pupdr15, ospeedr15, ot15, bs15, br15, afrh, afrh15);
-setup_pin!(PA11, 11, GPIOA, gpioa, gpioaen, moder11, pupdr11, ospeedr11, ot11, bs11, br11, afrh, afrh11);
-setup_pin!(PB6, 6, GPIOB, gpiob, gpioben, moder6, pupdr6, ospeedr6, ot6, bs6, br6, afrl, afrl6);
-setup_pin!(PB10, 10, GPIOB, gpiob, gpioben, moder10, pupdr10, ospeedr10, ot10, bs10, br10, afrh, afrh10);
-setup_pin!(PB13, 13, GPIOB, gpiob, gpioben, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
-setup_pin!(PB14, 14, GPIOB, gpiob, gpioben, moder14, pupdr14, ospeedr14, ot14, bs14, br14, afrh, afrh14);
-setup_pin!(PC7, 7, GPIOC, gpioh, gpiocen, moder7, pupdr7, ospeedr7, ot7, bs7, br7, afrl, afrl7);
-setup_pin!(PD12, 12, GPIOD, gpioh, gpioden, moder12, pupdr12, ospeedr12, ot12, bs12, br12, afrh, afrh12);
-setup_pin!(PD13, 13, GPIOD, gpioh, gpioden, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
-setup_pin!(PD14, 14, GPIOD, gpioh, gpioden, moder14, pupdr14, ospeedr14, ot14, bs14, br14, afrh, afrh14);
-setup_pin!(PD15, 15, GPIOD, gpioh, gpioden, moder15, pupdr15, ospeedr15, ot15, bs15, br15, afrh, afrh15);
+gpio!(GPIOA, gpioa, gpioaen, gpioarst, PAx, [
+    PA0: (pa0, 0, Input<Float>, AFRL, moder0, pupdr0, ospeedr0, otyper0, afrl, afrl0),
+    PA1: (pa1, 1, Input<Float>, AFRL, moder1, pupdr1, ospeedr1, otyper1, afrl, afrl1),
+    PA2: (pa2, 2, Input<Float>, AFRL, moder2, pupdr2, ospeedr2, otyper2, afrl, afrl2),
+    PA3: (pa3, 3, Input<Float>, AFRL, moder3, pupdr3, ospeedr3, otyper3, afrl, afrl3),
+    PA4: (pa4, 4, Input<Float>, AFRL, moder4, pupdr4, ospeedr4, otyper4, afrl, afrl4),
+    PA5: (pa5, 5, Input<Float>, AFRL, moder5, pupdr5, ospeedr5, otyper5, afrl, afrl5),
+    PA6: (pa6, 6, Input<Float>, AFRL, moder6, pupdr6, ospeedr6, otyper6, afrl, afrl6),
+    PA7: (pa7, 7, Input<Float>, AFRL, moder7, pupdr7, ospeedr7, otyper7, afrl, afrl7),
+    PA8: (pa8, 8, Input<Float>, AFRH, moder8, pupdr8, ospeedr8, otyper8, afrh, afrh8),
+    // USB OTG
+    // PA9: (pa9, 9, Input<Float>, AFRH, moder9, pupdr9, ospeedr9, otyper9, afrh, afrh9),
+    // PA10: (pa10, 10, Input<Float>, AFRH, moder10, pupdr10, ospeedr10, otyper10, afrh, afrh10),
+    // PA11: (pa11, 11, Input<Float>, AFRH, moder11, pupdr11, ospeedr11, otyper11, afrh, afrh11),
+    // PA12: (pa12, 12, Input<Float>, AFRH, moder12, pupdr12, ospeedr12, otyper12, afrh, afrh12),
+    // SWD
+    // PA13: (pa13, 13, Input<Float>, AFRH, moder13, pupdr13, ospeedr13, otyper13, afrh, afrh13),
+    // PA14: (pa14, 14, Input<Float>, AFRH, moder14, pupdr14, ospeedr14, otyper14, afrh, afrh14),
+    PA15: (pa15, 15, Input<Float>, AFRH, moder15, pupdr15, ospeedr15, otyper15, afrh, afrh15),
+]);
 
-#[derive(Copy,Clone)]
-enum ADC_Mode {
-    ADC_Mode_Independent                    = 0x00,
-    // TODO: all other modes not supported
-    ADC_DualMode_RegSimult_InjecSimult      = 0x01,
-    ADC_DualMode_RegSimult_AlterTrig        = 0x02,
-    ADC_DualMode_InjecSimult                = 0x05,
-    ADC_DualMode_RegSimult                  = 0x06,
-    ADC_DualMode_Interl                     = 0x07,
-    ADC_DualMode_AlterTrig                  = 0x09,
-    ADC_TripleMode_RegSimult_InjecSimult    = 0x11,
-    ADC_TripleMode_RegSimult_AlterTrig      = 0x12,
-    ADC_TripleMode_InjecSimult              = 0x15,
-    ADC_TripleMode_RegSimult                = 0x16,
-    ADC_TripleMode_Interl                   = 0x17,
-    ADC_TripleMode_AlterTrig                = 0x19,
-}
+gpio!(GPIOB, gpiob, gpioben, gpiobrst, PBx, [
+    PB0: (pb0, 0, Input<Float>, AFRL, moder0, pupdr0, ospeedr0, otyper0, afrl, afrl0),
+    PB1: (pb1, 1, Input<Float>, AFRL, moder1, pupdr1, ospeedr1, otyper1, afrl, afrl1),
+    PB2: (pb2, 2, Input<Float>, AFRL, moder2, pupdr2, ospeedr2, otyper2, afrl, afrl2),
+    // SWD
+    // PB3: (pb3, 3, Input<Float>, AFRL, moder3, pupdr3, ospeedr3, otyper3, afrl, afrl3),
+    PB4: (pb4, 4, Input<Float>, AFRL, moder4, pupdr4, ospeedr4, otyper4, afrl, afrl4),
+    PB5: (pb5, 5, Input<Float>, AFRL, moder5, pupdr5, ospeedr5, otyper5, afrl, afrl5),
+    PB6: (pb6, 6, Input<Float>, AFRL, moder6, pupdr6, ospeedr6, otyper6, afrl, afrl6),
+    PB7: (pb7, 7, Input<Float>, AFRL, moder7, pupdr7, ospeedr7, otyper7, afrl, afrl7),
+    PB8: (pb8, 8, Input<Float>, AFRH, moder8, pupdr8, ospeedr8, otyper8, afrh, afrh8),
+    PB9: (pb9, 9, Input<Float>, AFRH, moder9, pupdr9, ospeedr9, otyper9, afrh, afrh9),
+    PB10: (pb10, 10, Input<Float>, AFRH, moder10, pupdr10, ospeedr10, otyper10, afrh, afrh10),
+    PB11: (pb11, 11, Input<Float>, AFRH, moder11, pupdr11, ospeedr11, otyper11, afrh, afrh11),
+    PB12: (pb12, 12, Input<Float>, AFRH, moder12, pupdr12, ospeedr12, otyper12, afrh, afrh12),
+    PB13: (pb13, 13, Input<Float>, AFRH, moder13, pupdr13, ospeedr13, otyper13, afrh, afrh13),
+    PB14: (pb14, 14, Input<Float>, AFRH, moder14, pupdr14, ospeedr14, otyper14, afrh, afrh14),
+    PB15: (pb15, 15, Input<Float>, AFRH, moder15, pupdr15, ospeedr15, otyper15, afrh, afrh15),
+]);
 
-#[derive(Copy,Clone)]
-enum ADC_Prescaler {
-    ADC_Prescaler_Div2,
-    ADC_Prescaler_Div4,
-    ADC_Prescaler_Div6,
-    ADC_Prescaler_Div8
-}
+gpio!(GPIOC, gpioh, gpiocen, gpiocrst, PCx, [
+    // USB OTG
+    // PC0: (pc0, 0, Input<Float>, AFRL, moder0, pupdr0, ospeedr0, otyper0, afrl, afrl0),
+    PC1: (pc1, 1, Input<Float>, AFRL, moder1, pupdr1, ospeedr1, otyper1, afrl, afrl1),
+    PC2: (pc2, 2, Input<Float>, AFRL, moder2, pupdr2, ospeedr2, otyper2, afrl, afrl2),
+    PC3: (pc3, 3, Input<Float>, AFRL, moder3, pupdr3, ospeedr3, otyper3, afrl, afrl3),
+    PC4: (pc4, 4, Input<Float>, AFRL, moder4, pupdr4, ospeedr4, otyper4, afrl, afrl4),
+    PC5: (pc5, 5, Input<Float>, AFRL, moder5, pupdr5, ospeedr5, otyper5, afrl, afrl5),
+    PC6: (pc6, 6, Input<Float>, AFRL, moder6, pupdr6, ospeedr6, otyper6, afrl, afrl6),
+    PC7: (pc7, 7, Input<Float>, AFRL, moder7, pupdr7, ospeedr7, otyper7, afrl, afrl7),
+    PC8: (pc8, 8, Input<Float>, AFRH, moder8, pupdr8, ospeedr8, otyper8, afrh, afrh8),
+    PC9: (pc9, 9, Input<Float>, AFRH, moder9, pupdr9, ospeedr9, otyper9, afrh, afrh9),
+    PC10: (pc10, 10, Input<Float>, AFRH, moder10, pupdr10, ospeedr10, otyper10, afrh, afrh10),
+    PC11: (pc11, 11, Input<Float>, AFRH, moder11, pupdr11, ospeedr11, otyper11, afrh, afrh11),
+    PC12: (pc12, 12, Input<Float>, AFRH, moder12, pupdr12, ospeedr12, otyper12, afrh, afrh12),
+    PC13: (pc13, 13, Input<Float>, AFRH, moder13, pupdr13, ospeedr13, otyper13, afrh, afrh13),
+    PC14: (pc14, 14, Input<Float>, AFRH, moder14, pupdr14, ospeedr14, otyper14, afrh, afrh14),
+    PC15: (pc15, 15, Input<Float>, AFRH, moder15, pupdr15, ospeedr15, otyper15, afrh, afrh15),
+]);
 
-#[derive(Copy,Clone)]
-enum ADC_DMAMode {
-    ADC_DMAAccessMode_Disabled,
-    ADC_DMAAccessMode_1,
-    ADC_DMAAccessMode_2,
-    ADC_DMAAccessMode_3
-}
-
-#[derive(Copy,Clone)]
-enum ADC_TwoSampleDelay {
-    ADC_TwoSamplingDelay_5Cycles,
-    ADC_TwoSamplingDelay_6Cycles,
-    ADC_TwoSamplingDelay_7Cycles,
-    ADC_TwoSamplingDelay_8Cycles,
-    ADC_TwoSamplingDelay_9Cycles,
-    ADC_TwoSamplingDelay_10Cycles,
-    ADC_TwoSamplingDelay_11Cycles,
-    ADC_TwoSamplingDelay_12Cycles,
-    ADC_TwoSamplingDelay_13Cycles,
-    ADC_TwoSamplingDelay_14Cycles,
-    ADC_TwoSamplingDelay_15Cycles,
-    ADC_TwoSamplingDelay_16Cycles,
-    ADC_TwoSamplingDelay_17Cycles,
-    ADC_TwoSamplingDelay_18Cycles,
-    ADC_TwoSamplingDelay_19Cycles,
-    ADC_TwoSamplingDelay_20Cycles
-}
-
-#[derive(Copy,Clone)]
-struct ADCConfig {
-    adc_mode: ADC_Mode,
-    adc_prescaler: ADC_Prescaler,
-    adc_dma: ADC_DMAMode,
-    adc_twosample: ADC_TwoSampleDelay,
-}
-
-impl ADCConfig {
-    fn new() -> ADCConfig {
-        ADCConfig {
-            adc_mode: ADC_Mode::ADC_Mode_Independent,
-            adc_prescaler: ADC_Prescaler::ADC_Prescaler_Div2,
-            adc_dma: ADC_DMAMode::ADC_DMAAccessMode_Disabled,
-            adc_twosample: ADC_TwoSampleDelay::ADC_TwoSamplingDelay_5Cycles
-        }
-    }
-}
-
-///
-/// TODO:
-///  - Implement other ADC options supported
-///    in stm32f4xx_adc.c
-///
-/// NOTE: All of these `unsafe` blocks are actually
-/// safe, since they are atomic writes.
-pub fn initialize_adcs(rcc: &RCC, c_adc: &ADC_COMMON, adc1: &ADC1) {
-    let ref adc_config = ADCConfig::new();
-    unsafe {
-        // TODO: Figure out why mult() is missing
-        // c_adc.ccr.write(|w| w.mult().bits(adc_mode));
-        c_adc.ccr.modify(|r, w| w.bits((r.bits() & 0x00FF) & (adc_config.adc_mode as u32)));
-        c_adc.ccr.write(|w| w.adcpre().bits(adc_config.adc_prescaler as u8));
-        c_adc.ccr.write(|w| w.dma().bits(adc_config.adc_dma as u8));
-        c_adc.ccr.write(|w| w.delay().bits(adc_config.adc_twosample as u8));
-    }
-
-    // ADC1 Initialization
-    unsafe {
-        rcc.apb2enr.modify(|_, w| w.adc1en().set_bit());
-        adc1.cr1.modify(|_, w| w.res().bits(0x00)); 
-    }
-    adc1.cr1.write(|w| w.scan().clear_bit());
-    // Clear all relevant bits in cr2
-    let cr2_clear_mask = 0xC0FFF7FD;
-    unsafe { adc1.cr2.modify(|r, w| w.bits(r.bits() & cr2_clear_mask)); }
-    let sqr1_clear_mask = 0xFF0FFFFF; 
-    unsafe { adc1.sqr1.modify(|r, w| w.bits(r.bits() & sqr1_clear_mask)); }
-
-    // Turn ADC 1 On
-    adc1.cr2.write(|w| w.adon().set_bit());
-}
+gpio!(GPIOD, gpioh, gpioden, gpiodrst, PDx, [
+    PD0: (pd0, 0, Input<Float>, AFRL, moder0, pupdr0, ospeedr0, otyper0, afrl, afrl0),
+    PD1: (pd1, 1, Input<Float>, AFRL, moder1, pupdr1, ospeedr1, otyper1, afrl, afrl1),
+    PD2: (pd2, 2, Input<Float>, AFRL, moder2, pupdr2, ospeedr2, otyper2, afrl, afrl2),
+    PD3: (pd3, 3, Input<Float>, AFRL, moder3, pupdr3, ospeedr3, otyper3, afrl, afrl3),
+    PD4: (pd4, 4, Input<Float>, AFRL, moder4, pupdr4, ospeedr4, otyper4, afrl, afrl4),
+    // USB OTG
+    // PD5: (pd5, 5, Input<Float>, AFRL, moder5, pupdr5, ospeedr5, otyper5, afrl, afrl5),
+    PD6: (pd6, 6, Input<Float>, AFRL, moder6, pupdr6, ospeedr6, otyper6, afrl, afrl6),
+    PD7: (pd7, 7, Input<Float>, AFRL, moder7, pupdr7, ospeedr7, otyper7, afrl, afrl7),
+    PD8: (pd8, 8, Input<Float>, AFRH, moder8, pupdr8, ospeedr8, otyper8, afrh, afrh8),
+    PD9: (pd9, 9, Input<Float>, AFRH, moder9, pupdr9, ospeedr9, otyper9, afrh, afrh9),
+    PD10: (pd10, 10, Input<Float>, AFRH, moder10, pupdr10, ospeedr10, otyper10, afrh, afrh10),
+    PD11: (pd11, 11, Input<Float>, AFRH, moder11, pupdr11, ospeedr11, otyper11, afrh, afrh11),
+    PD12: (pd12, 12, Input<Float>, AFRH, moder12, pupdr12, ospeedr12, otyper12, afrh, afrh12),
+    PD13: (pd13, 13, Input<Float>, AFRH, moder13, pupdr13, ospeedr13, otyper13, afrh, afrh13),
+    PD14: (pd14, 14, Input<Float>, AFRH, moder14, pupdr14, ospeedr14, otyper14, afrh, afrh14),
+    PD15: (pd15, 15, Input<Float>, AFRH, moder15, pupdr15, ospeedr15, otyper15, afrh, afrh15),
+]);
