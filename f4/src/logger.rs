@@ -29,7 +29,7 @@ macro_rules! logger {
                 LogLevel::l_error => "ERROR",
                 LogLevel::l_fatal => "FATAL",
             };
-            stdout.write_fmt(format_args!("{}{} |\t\t", log_color, log_name)).unwrap();
+            stdout.write_fmt(format_args!("{}{}:{}:{}|\t\t", log_color, log_name, file!(), line!())).unwrap();
             stdout.write_fmt(format_args!($($arg)*)).unwrap();
             stdout.write_fmt(format_args!("\n")).unwrap();
         }

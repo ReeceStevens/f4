@@ -193,6 +193,7 @@ setup_pin!(PA7, 7, GPIOA, gpioa, gpioaen, moder7, pupdr7, ospeedr7, ot7, bs7, br
 setup_pin!(PA9, 9, GPIOA, gpioa, gpioaen, moder9, pupdr9, ospeedr9, ot9, bs9, br9, afrh, afrh9);
 setup_pin!(PA15, 15, GPIOA, gpioa, gpioaen, moder15, pupdr15, ospeedr15, ot15, bs15, br15, afrh, afrh15);
 setup_pin!(PA11, 11, GPIOA, gpioa, gpioaen, moder11, pupdr11, ospeedr11, ot11, bs11, br11, afrh, afrh11);
+setup_pin!(PB6, 6, GPIOB, gpiob, gpioben, moder6, pupdr6, ospeedr6, ot6, bs6, br6, afrl, afrl6);
 setup_pin!(PB10, 10, GPIOB, gpiob, gpioben, moder10, pupdr10, ospeedr10, ot10, bs10, br10, afrh, afrh10);
 setup_pin!(PB13, 13, GPIOB, gpiob, gpioben, moder13, pupdr13, ospeedr13, ot13, bs13, br13, afrh, afrh13);
 setup_pin!(PB14, 14, GPIOB, gpiob, gpioben, moder14, pupdr14, ospeedr14, ot14, bs14, br14, afrh, afrh14);
