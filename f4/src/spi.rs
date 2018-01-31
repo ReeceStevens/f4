@@ -1,30 +1,26 @@
 #![allow(dead_code)]
 
 use stm32f40x::{SpiRegisters, SPI1, SPI2, SPI4, GPIOA, GPIOB, GPIOC, RCC};
-use gpio::{GPIO_AF, GPIOConfig};
-use gpio::{PA5, PA6, PA7, PB10, PB14,
-           PC7, PB13, PA11, PA1};
+use gpio::AF5;
+use gpio::gpioa::{PA5, PA6, PA7, PA11, PA1};
+use gpio::gpiob::{PB14, PB15, PB13};
+use gpio::gpioc::{PC7};
 
 use stm32f40x::i2s2ext;
 
 
-pub trait Sclk<SPI1> {}
-pub trait Miso<SPI1> {}
-pub trait Mosi<SPI1> {}
+pub trait Sclk<SPI> {}
+pub trait Miso<SPI> {}
+pub trait Mosi<SPI> {}
+
 impl Sclk<SPI1> for PA5<AF5> {}
 impl Miso<SPI1> for PA6<AF5> {}
 impl Mosi<SPI1> for PA7<AF5> {}
 
-pub trait Sclk<SPI2> {}
-pub trait Miso<SPI2> {}
-pub trait Mosi<SPI2> {}
 impl Sclk<SPI2> for PC7<AF5> {}
 impl Miso<SPI2> for PB14<AF5> {}
 impl Mosi<SPI2> for PB15<AF5> {}
 
-pub trait Sclk<SPI4> {}
-pub trait Miso<SPI4> {}
-pub trait Mosi<SPI4> {}
 impl Sclk<SPI2> for PB13<AF5> {}
 impl Miso<SPI2> for PA11<AF5> {}
 impl Mosi<SPI2> for PA1<AF5> {}
@@ -42,26 +38,28 @@ pub trait DuplexTransfer {
 macro_rules! spi {
     ($SPIx:ident, $spix:ident, $apb:ident, $spixen:ident) => {
         impl<SCLK, MISO, MOSI> Spi<$SPIx, (SCLK, MISO, MOSI)> {
-            fn $spix(spi: $SPIx, pins: (SCLK, MISO, MOSI), rcc: &RCC) -> Self
+            pub fn $spix(spi: $SPIx, pins: (SCLK, MISO, MOSI), rcc: &RCC) -> Self
                 where SCLK: Sclk<$SPIx>, MISO: Miso<$SPIx>, MOSI: Mosi<$SPIx>
             {
                 rcc.$apb.modify(|_, w| w.$spixen().set_bit());
                 channel_config(&spi);
                 spi.cr1.modify(|_, w| w.spe().set_bit());
-                Spi { spix, pins }
+                Spi { spi, pins }
             }
         }
         impl<PINS> DuplexTransfer for Spi<$SPIx, PINS> {
             fn send(&self, data: u8) {
-                while self.sr.read().txe().bit_is_clear() {}; // Tx buffer should be empty before we begin
-                unsafe { self.dr.write(|w| w.bits(data as u32)); }
-                while self.sr.read().txe().bit_is_clear() {}; // Wait until transmit complete
+                let spi = &self.spi;
+                while spi.sr.read().txe().bit_is_clear() {}; // Tx buffer should be empty before we begin
+                unsafe { spi.dr.write(|w| w.bits(data as u32)); }
+                while spi.sr.read().txe().bit_is_clear() {}; // Wait until transmit complete
             }
 
             fn read(&self) -> u8 {
-                while self.sr.read().rxne().bit_is_clear() {}; // wait until receive complete
-                while self.sr.read().bsy().bit_is_set() {}; // Wait until SPI is not busy
-                self.dr.read().bits() as u8
+                let spi = &self.spi;
+                while spi.sr.read().rxne().bit_is_clear() {}; // wait until receive complete
+                while spi.sr.read().bsy().bit_is_set() {}; // Wait until SPI is not busy
+                spi.dr.read().bits() as u8
             }
         }
     }
