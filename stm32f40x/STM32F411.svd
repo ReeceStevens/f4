@@ -23903,6 +23903,16 @@ xs:noNamespaceSchemaLocation="CMSIS-SVD_Schema_1_1.xsd">
         <description>TIM3 global interrupt</description>
         <value>29</value>
       </interrupt>
+      <interrupt>
+        <name>TIM4</name>
+        <description>TIM4 global interrupt</description>
+        <value>30</value>
+      </interrupt>
+      <interrupt>
+        <name>TIM5</name>
+        <description>TIM5 global interrupt</description>
+        <value>50</value>
+      </interrupt>
       <registers>
         <register>
           <name>CR1</name>

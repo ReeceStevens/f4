@@ -122,7 +122,7 @@ pub fn configure_system_clocks(src: SysClkSource, rcc: &RCC, pwr: &PWR, flash: &
             while !(rcc.cfgr.read().sws1().bit_is_set()) {}
         }
     };
-    
+
     Clocks {
         sysclk: get_sysclk_freq(rcc),
         hclk: get_hclk_freq(rcc),

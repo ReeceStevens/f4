@@ -164,7 +164,7 @@ macro_rules! gpio {
                         unsafe { &(*$GPIO_BUS::ptr()).bsrr.write(|w| w.bits(1 << ($i + 16))); }
                     }
 
-                    pub fn downgrade(self) -> $PXx<Output<MODE>> {
+                    pub fn into_generic_pin(self) -> $PXx<Output<MODE>> {
                         $PXx { i: $i, _mode: PhantomData }
                     }
                 }
@@ -242,6 +242,12 @@ macro_rules! gpio {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::IN as u8) });
                         pupdr.pupdr().modify(|_, w| unsafe { w.$pupdr().bits(PuPd::Float as u8) });
                         $PXi::<Input<Float>> { _mode: PhantomData }
+                    }
+
+                    pub fn into_adc(self, moder: &mut MODER, pupdr: &mut PUPDR) -> $PXi<Analog<AnalogIn>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AN as u8) });
+                        pupdr.pupdr().modify(|_, w| unsafe { w.$pupdr().bits(PuPd::Float as u8) });
+                        $PXi::<Analog<AnalogIn>> { _mode: PhantomData }
                     }
 
                 }

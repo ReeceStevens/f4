@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use stm32f40x::{SpiRegisters, SPI1, SPI2, SPI4, GPIOA, GPIOB, GPIOC, RCC};
+use stm32f40x::{SPI1, SPI2, SPI4, GPIOA, GPIOB, GPIOC, RCC};
 use gpio::AF5;
 use gpio::gpioa::{PA5, PA6, PA7, PA11, PA1};
 use gpio::gpiob::{PB14, PB15, PB13};
@@ -42,11 +42,42 @@ macro_rules! spi {
                 where SCLK: Sclk<$SPIx>, MISO: Miso<$SPIx>, MOSI: Mosi<$SPIx>
             {
                 rcc.$apb.modify(|_, w| w.$spixen().set_bit());
-                channel_config(&spi);
-                spi.cr1.modify(|_, w| w.spe().set_bit());
-                Spi { spi, pins }
+                let spix = Spi { spi, pins };
+                spix.channel_config();
+                spix.spi.cr1.modify(|_, w| w.spe().set_bit());
+                spix
+            }
+
+            fn channel_config(&self) {
+                let spi_channel = &self.spi;
+                unsafe { spi_channel.cr1.modify(|_, w| w.br().bits(0x18)); }
+
+                // SPI_CPOL, SPI_CPHA (CPOL low, leading edge/1Edge)
+                spi_channel.cr1.modify(|_, w| w.cpol().clear_bit());
+                spi_channel.cr1.modify(|_, w| w.cpha().clear_bit());
+
+                // SPI Datasize (8 bit -> clear DFF)
+                spi_channel.cr1.modify(|_, w| w.dff().clear_bit());
+
+                // SPI_FirstBit -> (LSBFirst) (set as MSB first)
+                spi_channel.cr1.modify(|_, w| w.lsbfirst().clear_bit());
+
+                // SPI Direction (full duplex mode)
+                spi_channel.cr1.modify(|_, w| w.bidimode().clear_bit());
+                spi_channel.cr1.modify(|_, w| w.bidioe().clear_bit());
+                spi_channel.cr1.modify(|_, w| w.rxonly().clear_bit());
+
+                // SPI_Mode and SPI_NSS
+                // (SSM, SSI, MSTR) (set as master)
+                spi_channel.cr1.modify(|_, w| w.ssm().set_bit());
+                spi_channel.cr1.modify(|_, w| w.ssi().set_bit());
+                spi_channel.cr1.modify(|_, w| w.mstr().set_bit());
+
+                spi_channel.i2scfgr.modify(|_, w| w.i2smod().clear_bit());
+                unsafe { spi_channel.crcpr.modify(|_, w| w.crcpoly().bits(7)); }
             }
         }
+
         impl<PINS> DuplexTransfer for Spi<$SPIx, PINS> {
             fn send(&self, data: u8) {
                 let spi = &self.spi;
@@ -68,34 +99,3 @@ macro_rules! spi {
 spi!(SPI1, spi1, apb2enr, spi1en);
 spi!(SPI2, spi2, apb1enr, spi2en);
 spi!(SPI4, spi4, apb2enr, spi4en);
-
-fn channel_config(spi_channel: &SpiRegisters) {
-    /* CR1 Init */
-
-    // SPI_BaudRatePrescaler -> BR (prescaled by 16)
-    unsafe { spi_channel.cr1.modify(|_, w| w.br().bits(0x18)); }
-
-    // SPI_CPOL, SPI_CPHA (CPOL low, leading edge/1Edge)
-    spi_channel.cr1.modify(|_, w| w.cpol().clear_bit());
-    spi_channel.cr1.modify(|_, w| w.cpha().clear_bit());
-
-    // SPI Datasize (8 bit -> clear DFF)
-    spi_channel.cr1.modify(|_, w| w.dff().clear_bit());
-
-    // SPI_FirstBit -> (LSBFirst) (set as MSB first)
-    spi_channel.cr1.modify(|_, w| w.lsbfirst().clear_bit());
-
-    // SPI Direction (full duplex mode)
-    spi_channel.cr1.modify(|_, w| w.bidimode().clear_bit());
-    spi_channel.cr1.modify(|_, w| w.bidioe().clear_bit());
-    spi_channel.cr1.modify(|_, w| w.rxonly().clear_bit());
-
-    // SPI_Mode and SPI_NSS
-    // (SSM, SSI, MSTR) (set as master)
-    spi_channel.cr1.modify(|_, w| w.ssm().set_bit());
-    spi_channel.cr1.modify(|_, w| w.ssi().set_bit());
-    spi_channel.cr1.modify(|_, w| w.mstr().set_bit());
-
-    spi_channel.i2scfgr.modify(|_, w| w.i2smod().clear_bit());
-    unsafe { spi_channel.crcpr.modify(|_, w| w.crcpoly().bits(7)); }
-}

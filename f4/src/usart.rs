@@ -5,6 +5,8 @@ use gpio::gpiob::{PB3, PB7, PB6};
 use rcc::get_pclk2;
 use logger::*;
 
+use core::fmt;
+
 pub trait TxPin<USART> {}
 pub trait RxPin<USART> {}
 
@@ -28,13 +30,17 @@ pub struct Usart<USART, PINS> {
 
 pub trait Writer {
     fn send(&self, data: u8);
-    fn println(&self, message: &[u8]) {
+    fn print(&self, message: &[u8]) {
         for byte_char in message {
             self.send(*byte_char);
         }
+    }
+    fn println(&self, message: &[u8]) {
+        self.print(message);
         self.send(b'\n');
     }
 }
+
 
 // TODO: Only set up for transmit right now
 macro_rules! usart {
@@ -72,6 +78,13 @@ macro_rules! usart {
                 while self.usart.sr.read().txe().bit_is_clear() {};
                 self.usart.dr.write(|w| unsafe { w.dr().bits(data as u16) });
                 while self.usart.sr.read().tc().bit_is_clear() {};
+            }
+        }
+
+        impl<PINS> fmt::Write for Usart<$USARTX, PINS> {
+            fn write_str(&mut self, s: &str) -> fmt::Result {
+                self.print(s.as_bytes());
+                Ok(())
             }
         }
     }

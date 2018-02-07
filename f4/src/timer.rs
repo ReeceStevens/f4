@@ -1,7 +1,9 @@
 #![allow(dead_code)]
 use core;
 use core::result::Result::Err;
-use stm32f40x::{TIM2, TIM3, TIM4, RCC};
+use stm32f40x::{TIM2, TIM3, TIM4, TIM5, TIM9, TIM10, TIM11, RCC};
+
+use rcc::{get_pclk1, get_pclk2};
 
 pub struct TimerError;
 pub type TimerResult<T> = core::result::Result<T, TimerError>;
@@ -17,23 +19,26 @@ const ABP1_CLOCK_SPEED: u32 = 21_000_000; // 21 MHz
 // }
 
 macro_rules! setup_timer {
-    ($timer_name:ident, $timer_type:ident, $rcc_enable:ident) => {
+    ($timer_name:ident, $timer_type:ident, $arr:ident, $clkspeed:ident, $apb:ident, $rcc_enable:ident) => {
         pub struct $timer_name<'a>(pub &'a $timer_type);
 
         impl<'a> $timer_name<'a> {
             pub fn init(&self, rcc: &RCC, frequency: u32) {
                 let timx = self.0;
-                let ticks_per_timer: u32 = ABP1_CLOCK_SPEED / frequency;
+                let clock_speed: u32 = $clkspeed(rcc);
+                let ticks_per_timer: u32 = clock_speed / frequency;
                 let prescaler_value = (ticks_per_timer - 1) >> 16;
                 let autoreload_value = ticks_per_timer / (prescaler_value + 1);
-                rcc.apb1enr.modify(|_, w| w.$rcc_enable().set_bit());
+                rcc.$apb.modify(|_, w| w.$rcc_enable().set_bit());
                 unsafe {
                     timx.psc.modify(|_, w| w.psc().bits(prescaler_value as u16));
-                    timx.arr.modify(|_, w| w.arr_l().bits(autoreload_value as u16));
+                    timx.arr.modify(|_, w| w.$arr().bits(autoreload_value as u16));
                     timx.arr.modify(|_, w| w.arr_h().bits(0x0000 as u16));
                 }
                 timx.dier.modify(|_, w| w.uie().set_bit());
-                timx.cr1.modify(|_, w| w.opm().clear_bit());
+                timx.cr1.modify(|r, w| unsafe { // TIM10 and 11 don't have generated opm fields for some reason
+                    w.bits((r.bits() & !0x03))   
+                });
             }
 
             /// Clears the update event flag
@@ -63,9 +68,14 @@ macro_rules! setup_timer {
     }
 }
 
-setup_timer!(Timer2, TIM2, tim2en);
-setup_timer!(Timer3, TIM3, tim3en);
-setup_timer!(Timer4, TIM4, tim4en);
+setup_timer!(Timer2, TIM2, arr_l, get_pclk1, apb1enr, tim2en);
+setup_timer!(Timer3, TIM3, arr_l, get_pclk1, apb1enr, tim3en);
+setup_timer!(Timer4, TIM4, arr_l, get_pclk1, apb1enr, tim4en);
+setup_timer!(Timer5, TIM5, arr_l, get_pclk1, apb1enr, tim5en);
+
+// setup_timer!(Timer9, TIM9, arr, get_pclk2, apb2enr, tim9en);
+// setup_timer!(Timer10, TIM10, arr, get_pclk2, apb2enr, tim10en);
+// setup_timer!(Timer11, TIM11, arr, get_pclk2, apb2enr, tim11en);
 
 //pub struct Timer2<'a> {
 //    timx: &'a TIM2
