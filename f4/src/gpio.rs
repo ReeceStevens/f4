@@ -128,7 +128,7 @@ macro_rules! gpio {
 
             // Generic GPIO pin for this bus
             pub struct $PXx<MODE> {
-                i: u8,
+                pub i: u8,
                 _mode: PhantomData<MODE>
             }
 

@@ -10,7 +10,6 @@ bare-metal = "0.1.1"
 vcell = "0.1.0"
 
 [dependencies.cortex-m-rt]
-features = ["abort-on-panic"]
 version = "0.3.12"
 
 [dependencies.stm32f40x]
