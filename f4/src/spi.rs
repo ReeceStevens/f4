@@ -1,5 +1,8 @@
 #![allow(dead_code)]
 
+use hal::spi::FullDuplex;
+use nb;
+
 use stm32f40x::{SPI1, SPI2, SPI4, GPIOA, GPIOB, GPIOC, RCC};
 use gpio::AF5;
 use gpio::gpioa::{PA5, PA6, PA7, PA11, PA1};
@@ -33,6 +36,17 @@ pub struct Spi<SPIX, PINS> {
 pub trait DuplexTransfer {
     fn send(&self, data: u8);
     fn read(&self) -> u8;
+}
+
+/// SPI Error
+#[derive(Debug)]
+pub enum Error {
+    /// Overrun occurred
+    Overrun,
+    /// Mode fault occurred
+    ModeFault,
+    /// CRC error
+    Crc
 }
 
 macro_rules! spi {
@@ -78,19 +92,40 @@ macro_rules! spi {
             }
         }
 
-        impl<PINS> DuplexTransfer for Spi<$SPIx, PINS> {
-            fn send(&self, data: u8) {
+        impl<PINS> FullDuplex<u8> for Spi<$SPIx, PINS> {
+            type Error = Error;
+
+            fn send(&mut self, data: u8) -> nb::Result<(), Error> {
                 let spi = &self.spi;
-                while spi.sr.read().txe().bit_is_clear() {}; // Tx buffer should be empty before we begin
-                unsafe { spi.dr.write(|w| w.bits(data as u32)); }
-                while spi.sr.read().txe().bit_is_clear() {}; // Wait until transmit complete
+                if spi.sr.read().ovr().bit_is_set() {
+                    Err(nb::Error::Other(Error::Overrun))
+                } else if spi.sr.read().modf().bit_is_set() {
+                    Err(nb::Error::Other(Error::ModeFault))
+                } else if spi.sr.read().crcerr().bit_is_set() {
+                    Err(nb::Error::Other(Error::Crc))
+                } else if spi.sr.read().txe().bit_is_clear() {
+                    Err(nb::Error::WouldBlock)
+                } else {
+                    unsafe { spi.dr.write(|w| w.bits(data as u32)); }
+                    Ok(())
+                }
             }
 
-            fn read(&self) -> u8 {
+            fn read(&mut self) -> nb::Result<u8, Error> {
                 let spi = &self.spi;
-                while spi.sr.read().rxne().bit_is_clear() {}; // wait until receive complete
-                while spi.sr.read().bsy().bit_is_set() {}; // Wait until SPI is not busy
-                spi.dr.read().bits() as u8
+                if spi.sr.read().ovr().bit_is_set() {
+                    Err(nb::Error::Other(Error::Overrun))
+                } else if spi.sr.read().modf().bit_is_set() {
+                    Err(nb::Error::Other(Error::ModeFault))
+                } else if spi.sr.read().crcerr().bit_is_set() {
+                    Err(nb::Error::Other(Error::Crc))
+                } else if spi.sr.read().rxne().bit_is_clear() {
+                    Err(nb::Error::WouldBlock)
+                } else if spi.sr.read().bsy().bit_is_set() {
+                    Err(nb::Error::WouldBlock)
+                } else {
+                    Ok(spi.dr.read().bits() as u8)
+                }
             }
         }
     }

@@ -26,11 +26,14 @@ macro_rules! logger {
                 LogLevel::l_error => "ERROR",
                 LogLevel::l_fatal => "FATAL",
             };
-            use core::fmt::Write;
-            use cortex_m::itm::write_fmt;
-            write_fmt(format_args!("{}{}:{}:{}|\t\t", log_color, log_name, file!(), line!())).unwrap();
-            write_fmt(format_args!($($arg)*)).unwrap();
-            write_fmt(format_args!("\n")).unwrap();
+            unsafe {
+                use cortex_m::peripheral::ITM;
+                let itm = &mut *ITM::ptr();
+                use cortex_m::itm::{write_all, write_fmt};
+                write_fmt(&mut itm.stim[0], format_args!("{}{}:{}:{}|\t\t", log_color, log_name, file!(), line!()));
+                write_fmt(&mut itm.stim[0], format_args!($($arg)*));
+                write_fmt(&mut itm.stim[0], format_args!("\n"));
+            }
         }
     };
 }

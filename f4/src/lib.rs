@@ -9,6 +9,8 @@ pub extern crate stm32f40x;
 #[cfg(target_arch = "arm")]
 extern crate cortex_m;
 pub extern crate cortex_m_semihosting;
+extern crate embedded_hal as hal;
+extern crate nb;
 
 #[cfg(target_arch = "arm")]
 use core::intrinsics;
@@ -20,13 +22,17 @@ mod lang_items {
         unsafe  {
             use super::intrinsics;
             // use cortex_m_semihosting::hio as hio;
-            use core::fmt::Write;
             // let mut stdout = hio::hstdout().unwrap();
             use cortex_m::itm::write_fmt;
+            use cortex_m::peripheral::ITM;
+            // use stm32f40x::Peripherals;
+            // let p = Peripherals::steal();
+            // let mut itm = p.ITM;
+            let itm = &mut *ITM::ptr();
             // stdout.write_fmt(format_args!("{}:{}:{}", file, line, col));
             // stdout.write_fmt(msg);
-            write_fmt(format_args!("{}:{}:{}", file, line, col));
-            write_fmt(msg);
+            write_fmt(&mut itm.stim[0], format_args!("{}:{}:{}", file, line, col));
+            write_fmt(&mut itm.stim[0], msg);
             intrinsics::abort()
         }
     }
