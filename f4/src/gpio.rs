@@ -3,6 +3,7 @@
 
 use core::marker::PhantomData;
 use stm32f40x::RCC;
+use hal::digital::{InputPin, OutputPin};
 
 pub struct Output<MODE>(PhantomData<MODE>);
 
@@ -154,23 +155,37 @@ macro_rules! gpio {
                     _mode: PhantomData<MODE>
                 }
 
-                impl<MODE> $PXi<Output<MODE>> {
-                    pub fn set_high(&self) {
+                impl<MODE> OutputPin for $PXi<Output<MODE>> {
+                    fn is_high(&self) -> bool {
+                        unsafe { &(*$GPIO_BUS::ptr()).odr.read().bits() & (1 << $i) != 0 }
+                    }
+
+                    fn is_low(&self) -> bool {
+                        !self.is_high()
+                    }
+
+                    fn set_high(&mut self) {
                         unsafe { &(*$GPIO_BUS::ptr()).bsrr.write(|w| w.bits(1 << $i)); }
                     }
 
-                    pub fn set_low(&self) {
+                    fn set_low(&mut self) {
                         unsafe { &(*$GPIO_BUS::ptr()).bsrr.write(|w| w.bits(1 << ($i + 16))); }
                     }
+                }
 
+                impl<MODE> $PXi<Output<MODE>> {
                     pub fn into_generic_pin(self) -> $PXx<Output<MODE>> {
                         $PXx { i: $i, _mode: PhantomData }
                     }
                 }
 
-                impl<MODE> $PXi<Input<MODE>> {
-                    pub fn read(&self) -> bool {
+                impl<MODE> InputPin for $PXi<Input<MODE>> {
+                    fn is_high(&self) -> bool {
                         unsafe { &(*$GPIO_BUS::ptr()).idr.read().bits() & (1 << $i) != 0 }
+                    }
+
+                    fn is_low(&self) -> bool {
+                        !self.is_high()
                     }
                 }
 

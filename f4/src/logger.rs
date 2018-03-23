@@ -25,7 +25,7 @@ macro_rules! logger {
             unsafe {
                 use cortex_m::peripheral::ITM;
                 let itm = &mut *ITM::ptr();
-                use cortex_m::itm::{write_all, write_fmt};
+                use cortex_m::itm::write_fmt;
                 write_fmt(&mut itm.stim[0], format_args!("{}{}:{}:{}|\t\t", log_color, log_name, file!(), line!()));
                 write_fmt(&mut itm.stim[0], format_args!($($arg)*));
                 write_fmt(&mut itm.stim[0], format_args!("\n"));

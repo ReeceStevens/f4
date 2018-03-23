@@ -12,9 +12,12 @@ description = "A hardware abstraction layer for the STM32F4x family of microcont
 bare-metal = "0.1.1"
 cortex-m = "0.4.2"
 cortex-m-semihosting = "0.2.0"
-embedded-hal = "0.1.2"
 nb = "0.1.1"
 vcell = "0.1.0"
+
+[dependencies.embedded-hal]
+features = ["unproven"]
+version = "0.1.2"
 
 [dependencies.stm32f40x]
 features = ["rt"]
