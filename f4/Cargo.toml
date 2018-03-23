@@ -1,7 +1,12 @@
 [package]
-authors = ["ReeceStevens <reecestevens24@gmail.com>"]
+authors = ["Reece Stevens <reecestevens24@gmail.com>"]
 name = "f4"
 version = "0.1.0"
+categories = [
+    "embedded",
+    "no-std",
+],
+description = "A hardware abstraction layer for the STM32F4x family of microcontrollers"
 
 [dependencies]
 bare-metal = "0.1.1"
