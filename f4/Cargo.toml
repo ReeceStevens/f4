@@ -5,7 +5,7 @@ version = "0.1.0"
 categories = [
     "embedded",
     "no-std",
-],
+]
 description = "A hardware abstraction layer for the STM32F4x family of microcontrollers"
 
 [dependencies]
