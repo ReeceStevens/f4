@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 #![allow(non_camel_case_types)]
 
-// PhantomData is used to mark the use of a subtype
 use core::marker::PhantomData;
 use stm32f40x::RCC;
 

@@ -5,6 +5,7 @@ use gpio::gpioa::{PA0, PA1, PA2, PA3, PA4, PA5, PA6, PA7};
 use gpio::gpiob::{PB0, PB1};
 use gpio::gpioc::{PC0, PC1, PC2, PC3, PC4, PC5};
 
+#[allow(non_camel_case_types)]
 #[derive(Clone,Copy)]
 pub enum ADC_SampleTime {
     cycles_3 = 0x00,
@@ -17,57 +18,56 @@ pub enum ADC_SampleTime {
     cycles_480 = 0x07
 }
 
-
-pub trait ADC_Pin<ADCX> {
+pub trait ADCPin<ADCX> {
     fn get_channel(&self) -> u8;
 }
 
-impl ADC_Pin<ADC1> for PA0<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PA0<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 0 }
 }
-impl ADC_Pin<ADC1> for PA1<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PA1<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 1 }
 }
-impl ADC_Pin<ADC1> for PA2<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PA2<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 2 }
 }
-impl ADC_Pin<ADC1> for PA3<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PA3<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 3 }
 }
-impl ADC_Pin<ADC1> for PA4<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PA4<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 4 }
 }
-impl ADC_Pin<ADC1> for PA5<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PA5<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 5 }
 }
-impl ADC_Pin<ADC1> for PA6<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PA6<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 6 }
 }
-impl ADC_Pin<ADC1> for PA7<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PA7<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 7 }
 }
-impl ADC_Pin<ADC1> for PB0<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PB0<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 8 }
 }
-impl ADC_Pin<ADC1> for PB1<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PB1<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 9 }
 }
-impl ADC_Pin<ADC1> for PC0<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PC0<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 10 }
 }
-impl ADC_Pin<ADC1> for PC1<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PC1<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 11 }
 }
-impl ADC_Pin<ADC1> for PC2<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PC2<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 12 }
 }
-impl ADC_Pin<ADC1> for PC3<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PC3<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 13 }
 }
-impl ADC_Pin<ADC1> for PC4<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PC4<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 14 }
 }
-impl ADC_Pin<ADC1> for PC5<Analog<AnalogIn>> {
+impl ADCPin<ADC1> for PC5<Analog<AnalogIn>> {
     fn get_channel(&self) -> u8 { 15 }
 }
 
@@ -82,8 +82,8 @@ pub trait AdcConversion {
 }
 
 impl<PIN> Adc<ADC1, PIN> {
-    pub fn Adc1(adcx: ADC1, c_adc: &ADC_COMMON, pin: PIN, sample_time: ADC_SampleTime, rcc: &RCC) -> Self
-        where PIN: ADC_Pin<ADC1>
+    pub fn adc1(adcx: ADC1, c_adc: &ADC_COMMON, pin: PIN, sample_time: ADC_SampleTime, rcc: &RCC) -> Self
+        where PIN: ADCPin<ADC1>
     {
         c_adc.ccr.reset();
         rcc.apb2enr.modify(|_, w| w.adc1en().set_bit());

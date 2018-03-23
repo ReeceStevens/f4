@@ -37,7 +37,7 @@ macro_rules! setup_timer {
                 }
                 timx.dier.modify(|_, w| w.uie().set_bit());
                 timx.cr1.modify(|r, w| unsafe { // TIM10 and 11 don't have generated opm fields for some reason
-                    w.bits((r.bits() & !0x03))   
+                    w.bits(r.bits() & !0x03)
                 });
             }
 
@@ -76,60 +76,3 @@ setup_timer!(Timer5, TIM5, arr_l, get_pclk1, apb1enr, tim5en);
 // setup_timer!(Timer9, TIM9, arr, get_pclk2, apb2enr, tim9en);
 // setup_timer!(Timer10, TIM10, arr, get_pclk2, apb2enr, tim10en);
 // setup_timer!(Timer11, TIM11, arr, get_pclk2, apb2enr, tim11en);
-
-//pub struct Timer2<'a> {
-//    timx: &'a TIM2
-//}
-
-//impl<'a> Timer2<'a> {
-//    pub fn init(&self, tc: TimerChannel, rcc: &RCC, frequency: u32) {
-//        let timx = self.timx;
-//        let ticks_per_timer: u32 = ABP1_CLOCK_SPEED / frequency;
-//        let prescaler_value = (ticks_per_timer - 1) >> 16;
-//        let autoreload_value = ticks_per_timer / (prescaler_value + 1);
-//            TimerChannel::TIM2 => {
-//                rcc.apb1enr.modify(|_, w| w.tim2en().set_bit());
-//            },
-//            TimerChannel::TIM3 => {
-//                rcc.apb1enr.modify(|_, w| w.tim3en().set_bit());
-//            },
-//            TimerChannel::TIM4 => {
-//                rcc.apb1enr.modify(|_, w| w.tim4en().set_bit());
-//            }
-//        };
-//        unsafe {
-//            timx.psc.modify(|_, w| w.psc().bits(prescaler_value as u16));
-//            timx.arr.modify(|_, w| w.arr_l().bits(autoreload_value as u16));
-//            timx.arr.modify(|_, w| w.arr_h().bits(0x0000 as u16));
-//        }
-//        timx.dier.modify(|_, w| w.uie().set_bit());
-//        timx.cr1.modify(|_, w| w.opm().clear_bit());
-//    }
-
-//    pub fn new(timx: &TIM2) -> Timer {
-//        Timer { timx: &timx }
-//    }
-
-//    /// Clears the update event flag
-//    ///
-//    /// Returns `Err` if no update event has occurred
-//    pub fn clear_update_flag(&self) -> TimerResult<()> {
-
-//        if self.timx.sr.read().uif().bit_is_clear() {
-//            Err(TimerError {})
-//        } else {
-//            self.timx.sr.modify(|_, w| w.uif().clear_bit());
-//            Ok(())
-//        }
-//    }
-
-//    /// Resumes the timer count
-//    pub fn resume(&self) {
-//        self.timx.cr1.modify(|_, w| w.cen().set_bit());
-//    }
-
-//    /// Pauses the timer
-//    pub fn pause(&self) {
-//        self.timx.cr1.modify(|_, w| w.cen().clear_bit());
-//    }
-//}

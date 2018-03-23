@@ -21,16 +21,9 @@ mod lang_items {
     extern "C" fn panic_fmt(msg: ::core::fmt::Arguments, file: &'static str, line: u32, col: u32) -> ! {
         unsafe  {
             use super::intrinsics;
-            // use cortex_m_semihosting::hio as hio;
-            // let mut stdout = hio::hstdout().unwrap();
             use cortex_m::itm::write_fmt;
             use cortex_m::peripheral::ITM;
-            // use stm32f40x::Peripherals;
-            // let p = Peripherals::steal();
-            // let mut itm = p.ITM;
             let itm = &mut *ITM::ptr();
-            // stdout.write_fmt(format_args!("{}:{}:{}", file, line, col));
-            // stdout.write_fmt(msg);
             write_fmt(&mut itm.stim[0], format_args!("{}:{}:{}", file, line, col));
             write_fmt(&mut itm.stim[0], msg);
             intrinsics::abort()

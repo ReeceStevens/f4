@@ -3,14 +3,11 @@
 use hal::spi::FullDuplex;
 use nb;
 
-use stm32f40x::{SPI1, SPI2, SPI4, GPIOA, GPIOB, GPIOC, RCC};
+use stm32f40x::{SPI1, SPI2, SPI4, RCC};
 use gpio::AF5;
 use gpio::gpioa::{PA5, PA6, PA7, PA11, PA1};
 use gpio::gpiob::{PB14, PB15, PB13};
 use gpio::gpioc::{PC7};
-
-use stm32f40x::i2s2ext;
-
 
 pub trait Sclk<SPI> {}
 pub trait Miso<SPI> {}

@@ -1,5 +1,3 @@
-#![feature(lang_items)]
-
 #[allow(non_camel_case_types)]
 pub enum LogLevel {
     l_info,
@@ -8,8 +6,6 @@ pub enum LogLevel {
     l_fatal
 }
 
-// TODO: Make this debug-mode only (i.e. make all logging calls noops
-// when compiling for release)
 #[macro_export]
 macro_rules! logger {
     ($level:expr, $($arg:tt)*) => {
@@ -35,5 +31,26 @@ macro_rules! logger {
                 write_fmt(&mut itm.stim[0], format_args!("\n"));
             }
         }
+    };
+}
+
+#[macro_export]
+macro_rules! info {
+    ($($arg:tt)*) => {
+        logger!(LogLevel::l_info, $($arg)*);
+    };
+}
+
+#[macro_export]
+macro_rules! warn {
+    ($($arg:tt)*) => {
+        logger!(LogLevel::l_warn, $($arg)*);
+    };
+}
+
+#[macro_export]
+macro_rules! error {
+    ($($arg:tt)*) => {
+        logger!(LogLevel::l_error, $($arg)*);
     };
 }

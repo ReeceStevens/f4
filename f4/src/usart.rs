@@ -1,4 +1,4 @@
-use stm32f40x::{RCC, GPIOA, GPIOB, USART1, USART2, USART6};
+use stm32f40x::{RCC, USART1, USART2, USART6};
 use gpio::{AF7, AF8};
 use gpio::gpioa::{PA9, PA15, PA10, PA2, PA3, PA11, PA12};
 use gpio::gpiob::{PB3, PB7, PB6};

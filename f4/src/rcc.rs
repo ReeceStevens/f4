@@ -1,5 +1,6 @@
 use stm32f40x::{RCC, PWR, FLASH};
 
+#[allow(dead_code)]
 const ABP1_CLOCK_SPEED: u32 = 21_000_000; // 21 MHz
 const HSI_VALUE: u32 = 16_000_000;
 // const HSE_VALUE: u32 = 25_000_000;
@@ -8,16 +9,7 @@ const PLLM: u32 = 0x0000003F;
 const PLLN: u32 = 0x00003FC0;
 const PLLP: u32 = 0x0000C000;
 const PLLQ: u32 = 0x00F00000;
-const APBAHBPrescTable: [u32; 16] = [0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6, 7, 8, 9];
-
-// #define PLL_M      25
-// #define PLL_N      336
-
-// /* SYSCLK = PLL_VCO / PLL_P */
-// #define PLL_P      2
-
-// /* USB OTG FS, SDIO and RNG Clock =  PLL_VCO / PLLQ */
-// #define PLL_Q      7
+const APB_AHB_PRESC_TABLE: [u32; 16] = [0, 0, 0, 0, 1, 2, 3, 4, 1, 2, 3, 4, 6, 7, 8, 9];
 
 #[derive(Copy,Clone)]
 pub enum SysClkSource {
@@ -53,19 +45,19 @@ pub fn get_sysclk_freq(rcc: &RCC) -> u32 {
 
 pub fn get_hclk_freq(rcc: &RCC) -> u32 {
     let hpre = rcc.cfgr.read().hpre().bits() as usize;
-    let prescaler = APBAHBPrescTable[hpre];
+    let prescaler = APB_AHB_PRESC_TABLE[hpre];
     get_sysclk_freq(rcc) >> prescaler
 }
 
 pub fn get_pclk1(rcc: &RCC) -> u32 {
     let ppre1 = rcc.cfgr.read().ppre1().bits() as usize;
-    let prescaler = APBAHBPrescTable[ppre1];
+    let prescaler = APB_AHB_PRESC_TABLE[ppre1];
     get_hclk_freq(rcc) >> prescaler
 }
 
 pub fn get_pclk2(rcc: &RCC) -> u32 {
     let ppre2 = rcc.cfgr.read().ppre2().bits() as usize;
-    let prescaler = APBAHBPrescTable[ppre2];
+    let prescaler = APB_AHB_PRESC_TABLE[ppre2];
     get_hclk_freq(rcc) >> prescaler
 }
 
@@ -95,7 +87,7 @@ pub fn configure_system_clocks(src: SysClkSource, rcc: &RCC, pwr: &PWR, flash: &
     let pllp = 2;
     let pllp_bits = (pllp / 2) - 1;
     let pllq = 7;
-    let pllcfgr_register = (pllm & PLLM) | 
+    let pllcfgr_register = (pllm & PLLM) |
                            ((plln << 6) & PLLN) |
                            ((pllp_bits << 16) & PLLP) |
                            ((pllq << 24) & PLLQ);
@@ -109,7 +101,7 @@ pub fn configure_system_clocks(src: SysClkSource, rcc: &RCC, pwr: &PWR, flash: &
     flash.acr.modify(|_, w| w.dcen().set_bit());
     flash.acr.modify(|_, w| unsafe {w.latency().bits(5)});
 
-    match src { 
+    match src {
         SysClkSource::HSI => {
             while !(rcc.cfgr.read().sws0().bit_is_clear() && rcc.cfgr.read().sws1().bit_is_clear()) {}
         },
