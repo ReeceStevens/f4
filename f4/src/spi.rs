@@ -109,6 +109,7 @@ macro_rules! spi {
             }
 
             fn read(&mut self) -> nb::Result<u8, Error> {
+                self.send(0x00);
                 let spi = &self.spi;
                 if spi.sr.read().ovr().bit_is_set() {
                     Err(nb::Error::Other(Error::Overrun))
