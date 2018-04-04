@@ -40,4 +40,4 @@ pub mod spi;
 pub mod timer;
 pub mod usart;
 pub mod adc;
-
+pub mod exti;
