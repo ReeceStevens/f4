@@ -34,3 +34,4 @@ macro_rules! exti {
 }
 
 exti!(exti14, mr14, tr14);
+exti!(exti15, mr15, tr15);
