@@ -72,9 +72,9 @@ impl ADCPin<ADC1> for PC5<Analog<AnalogIn>> {
 }
 
 pub struct Adc<ADCX, PIN> {
-    adcx: ADCX,
-    pin: PIN,
-    channel: u8
+    pub adcx: ADCX,
+    pub pin: PIN,
+    pub channel: u8
 }
 
 pub trait AdcConversion {
@@ -88,7 +88,7 @@ impl<PIN> Adc<ADC1, PIN> {
         c_adc.ccr.reset();
         rcc.apb2enr.modify(|_, w| w.adc1en().set_bit());
         adcx.cr1.reset();
-        adcx.cr2.write(|w| w.adon().set_bit());
+        adcx.cr2.modify(|_, w| w.adon().set_bit());
 
         let channel = pin.get_channel();
 
@@ -107,9 +107,12 @@ impl<PIN> Adc<ADC1, PIN> {
         }
 
         // TODO: this config assumes that ADC Rank == 1
+        // This assumption is fine only when 1 ADC is in use.
         adcx.sqr3.modify(|r, w| unsafe {
-            let sqr_mask = 0x1Fu32;
-            w.bits((r.bits() & !sqr_mask) & channel as u32)
+            let rank = 1;
+            let sqr_mask = 0x1Fu32 << (rank - 1);
+            let sqr_bits = r.bits() & !sqr_mask;
+            w.bits(sqr_bits | ((channel as u32) << (5 * (rank - 1))))
         });
 
         Adc { adcx, pin, channel }
