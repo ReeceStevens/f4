@@ -3,8 +3,6 @@
 #![cfg_attr(target_arch="arm", feature(core_intrinsics))]
 #![feature(lang_items, libc)]
 #![macro_use]
-#![feature(compiler_builtins_lib)]
-extern crate compiler_builtins;
 pub extern crate stm32f40x;
 #[cfg(target_arch = "arm")]
 extern crate cortex_m;
