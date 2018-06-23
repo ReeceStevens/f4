@@ -1,7 +1,7 @@
 #![no_std]
 #![feature(const_fn)]
 #![cfg_attr(target_arch="arm", feature(core_intrinsics))]
-#![feature(lang_items, libc)]
+#![feature(panic_implementation, libc)]
 #![macro_use]
 pub extern crate stm32f40x;
 #[cfg(target_arch = "arm")]
@@ -12,20 +12,17 @@ extern crate nb;
 
 #[cfg(target_arch = "arm")]
 use core::intrinsics;
+use core::panic::PanicInfo;
 
-mod lang_items {
-    #[lang = "panic_fmt"]
-    #[no_mangle]
-    extern "C" fn panic_fmt(msg: ::core::fmt::Arguments, file: &'static str, line: u32, col: u32) -> ! {
-        unsafe  {
-            use super::intrinsics;
-            use cortex_m::itm::write_fmt;
-            use cortex_m::peripheral::ITM;
-            let itm = &mut *ITM::ptr();
-            write_fmt(&mut itm.stim[0], format_args!("{}:{}:{}", file, line, col));
-            write_fmt(&mut itm.stim[0], msg);
-            intrinsics::abort()
-        }
+#[panic_implementation]
+fn panic(info: &PanicInfo) -> ! {
+    unsafe  {
+        use intrinsics;
+        use cortex_m::itm::write_fmt;
+        use cortex_m::peripheral::ITM;
+        let itm = &mut *ITM::ptr();
+        write_fmt(&mut itm.stim[0], format_args!("{}", info));
+        intrinsics::abort()
     }
 }
 
