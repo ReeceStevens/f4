@@ -89,10 +89,8 @@ macro_rules! spi {
             }
         }
 
-        impl<PINS> FullDuplex<u8> for Spi<$SPIx, PINS> {
-            type Error = Error;
-
-            fn send(&mut self, data: u8) -> nb::Result<(), Error> {
+        impl<PINS> Spi<$SPIx, PINS> {
+            fn transmit(&mut self, data: u8) -> nb::Result<(), Error> {
                 let spi = &self.spi;
                 if spi.sr.read().ovr().bit_is_set() {
                     Err(nb::Error::Other(Error::Overrun))
@@ -108,8 +106,7 @@ macro_rules! spi {
                 }
             }
 
-            fn read(&mut self) -> nb::Result<u8, Error> {
-                self.send(0x00);
+            fn receive(&mut self) -> nb::Result<u8, Error> {
                 let spi = &self.spi;
                 if spi.sr.read().ovr().bit_is_set() {
                     Err(nb::Error::Other(Error::Overrun))
@@ -124,6 +121,22 @@ macro_rules! spi {
                 } else {
                     Ok(spi.dr.read().bits() as u8)
                 }
+            }
+        }
+
+        impl<PINS> FullDuplex<u8> for Spi<$SPIx, PINS> {
+            type Error = Error;
+
+            fn send(&mut self, data: u8) -> nb::Result<(), Error> {
+                self.transmit(data)?;
+                let _unused = self.receive()?;
+                Ok(())
+            }
+
+            fn read(&mut self) -> nb::Result<u8, Error> {
+                let dummy = 0x00;
+                self.transmit(dummy)?;
+                self.receive()
             }
         }
     }
