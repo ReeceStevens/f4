@@ -15,21 +15,21 @@ pub struct RegisterBlock {
     pub fs_gintsts: FS_GINTSTS,
     #[doc = "0x18 - OTG_FS interrupt mask register (OTG_FS_GINTMSK)"]
     pub fs_gintmsk: FS_GINTMSK,
-    #[doc = "OTG_FS Receive status debug read(Host\n          mode) OTG_FS Receive status debug read(Device\n          mode)"]
-    pub fs_grxstsr: FsGrxstsrUnion,
-    _reserved8: [u8; 4usize],
+    #[doc = "0x1c - OTG_FS Receive status debug read(Device mode)"]
+    pub fs_grxstsr_device: FS_GRXSTSR_DEVICE,
+    _reserved0: [u8; 4usize],
     #[doc = "0x24 - OTG_FS Receive FIFO size register (OTG_FS_GRXFSIZ)"]
     pub fs_grxfsiz: FS_GRXFSIZ,
-    #[doc = "OTG_FS non-periodic transmit FIFO size\n          register (Host mode) OTG_FS non-periodic transmit FIFO size\n          register (Device mode)"]
-    pub fs_gnptxfsiz: FsGnptxfsizUnion,
+    #[doc = "0x28 - OTG_FS non-periodic transmit FIFO size register (Device mode)"]
+    pub fs_gnptxfsiz_device: FS_GNPTXFSIZ_DEVICE,
     #[doc = "0x2c - OTG_FS non-periodic transmit FIFO/queue status register (OTG_FS_GNPTXSTS)"]
     pub fs_gnptxsts: FS_GNPTXSTS,
-    _reserved11: [u8; 8usize],
+    _reserved1: [u8; 8usize],
     #[doc = "0x38 - OTG_FS general core configuration register (OTG_FS_GCCFG)"]
     pub fs_gccfg: FS_GCCFG,
     #[doc = "0x3c - core ID register"]
     pub fs_cid: FS_CID,
-    _reserved13: [u8; 192usize],
+    _reserved2: [u8; 192usize],
     #[doc = "0x100 - OTG_FS Host periodic transmit FIFO size register (OTG_FS_HPTXFSIZ)"]
     pub fs_hptxfsiz: FS_HPTXFSIZ,
     #[doc = "0x104 - OTG_FS device IN endpoint transmit FIFO size register (OTG_FS_DIEPTXF2)"]
@@ -39,9 +39,7 @@ pub struct RegisterBlock {
     #[doc = "0x10c - OTG_FS device IN endpoint transmit FIFO size register (OTG_FS_DIEPTXF4)"]
     pub fs_dieptxf3: FS_DIEPTXF3,
 }
-#[doc = "OTG_FS Receive status debug read(Host\n          mode) OTG_FS Receive status debug read(Device\n          mode)"]
-#[repr(C)]pub union FsGrxstsrUnion { # [ doc = "0x1c - OTG_FS Receive status debug read(Host mode)" ] pub fs_grxstsr_host : FS_GRXSTSR_HOST , # [ doc = "0x1c - OTG_FS Receive status debug read(Device mode)" ] pub fs_grxstsr_device : FS_GRXSTSR_DEVICE }#[doc = "OTG_FS non-periodic transmit FIFO size\n          register (Host mode) OTG_FS non-periodic transmit FIFO size\n          register (Device mode)"]
-#[repr(C)]pub union FsGnptxfsizUnion { # [ doc = "0x28 - OTG_FS non-periodic transmit FIFO size register (Host mode)" ] pub fs_gnptxfsiz_host : FS_GNPTXFSIZ_HOST , # [ doc = "0x28 - OTG_FS non-periodic transmit FIFO size register (Device mode)" ] pub fs_gnptxfsiz_device : FS_GNPTXFSIZ_DEVICE }#[doc = "OTG_FS control and status register (OTG_FS_GOTGCTL)"]
+#[doc = "OTG_FS control and status register (OTG_FS_GOTGCTL)"]
 pub struct FS_GOTGCTL {
     register: ::vcell::VolatileCell<u32>,
 }

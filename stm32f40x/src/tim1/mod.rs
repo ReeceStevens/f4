@@ -13,10 +13,10 @@ pub struct RegisterBlock {
     pub sr: SR,
     #[doc = "0x14 - event generation register"]
     pub egr: EGR,
-    #[doc = "capture/compare mode register 1 (input\n          mode) capture/compare mode register 1 (output\n          mode)"]
-    pub ccmr1: Ccmr1Union,
-    #[doc = "capture/compare mode register 2 (input\n          mode) capture/compare mode register 2 (output\n          mode)"]
-    pub ccmr2: Ccmr2Union,
+    #[doc = "0x18 - capture/compare mode register 1 (output mode)"]
+    pub ccmr1_output: CCMR1_OUTPUT,
+    #[doc = "0x1c - capture/compare mode register 2 (output mode)"]
+    pub ccmr2_output: CCMR2_OUTPUT,
     #[doc = "0x20 - capture/compare enable register"]
     pub ccer: CCER,
     #[doc = "0x24 - counter"]
@@ -42,9 +42,7 @@ pub struct RegisterBlock {
     #[doc = "0x4c - DMA address for full transfer"]
     pub dmar: DMAR,
 }
-#[doc = "capture/compare mode register 1 (input\n          mode) capture/compare mode register 1 (output\n          mode)"]
-#[repr(C)]pub union Ccmr1Union { # [ doc = "0x18 - capture/compare mode register 1 (input mode)" ] pub ccmr1_input : CCMR1_INPUT , # [ doc = "0x18 - capture/compare mode register 1 (output mode)" ] pub ccmr1_output : CCMR1_OUTPUT }#[doc = "capture/compare mode register 2 (input\n          mode) capture/compare mode register 2 (output\n          mode)"]
-#[repr(C)]pub union Ccmr2Union { # [ doc = "0x1c - capture/compare mode register 2 (input mode)" ] pub ccmr2_input : CCMR2_INPUT , # [ doc = "0x1c - capture/compare mode register 2 (output mode)" ] pub ccmr2_output : CCMR2_OUTPUT }#[doc = "control register 1"]
+#[doc = "control register 1"]
 pub struct CR1 {
     register: ::vcell::VolatileCell<u32>,
 }

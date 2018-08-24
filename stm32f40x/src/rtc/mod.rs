@@ -39,7 +39,7 @@ pub struct RegisterBlock {
     pub alrmassr: ALRMASSR,
     #[doc = "0x48 - alarm B sub second register"]
     pub alrmbssr: ALRMBSSR,
-    _reserved19: [u8; 4usize],
+    _reserved0: [u8; 4usize],
     #[doc = "0x50 - backup register"]
     pub bkp0r: BKP0R,
     #[doc = "0x54 - backup register"]

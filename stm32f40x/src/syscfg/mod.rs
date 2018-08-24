@@ -13,7 +13,7 @@ pub struct RegisterBlock {
     pub exticr3: EXTICR3,
     #[doc = "0x14 - external interrupt configuration register 4"]
     pub exticr4: EXTICR4,
-    _reserved6: [u8; 8usize],
+    _reserved0: [u8; 8usize],
     #[doc = "0x20 - Compensation cell control register"]
     pub cmpcr: CMPCR,
 }

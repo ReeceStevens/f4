@@ -7,7 +7,7 @@ pub struct RegisterBlock {
     pub fs_dctl: FS_DCTL,
     #[doc = "0x08 - OTG_FS device status register (OTG_FS_DSTS)"]
     pub fs_dsts: FS_DSTS,
-    _reserved3: [u8; 4usize],
+    _reserved0: [u8; 4usize],
     #[doc = "0x10 - OTG_FS device IN endpoint common interrupt mask register (OTG_FS_DIEPMSK)"]
     pub fs_diepmsk: FS_DIEPMSK,
     #[doc = "0x14 - OTG_FS device OUT endpoint common interrupt mask register (OTG_FS_DOEPMSK)"]
@@ -16,96 +16,96 @@ pub struct RegisterBlock {
     pub fs_daint: FS_DAINT,
     #[doc = "0x1c - OTG_FS all endpoints interrupt mask register (OTG_FS_DAINTMSK)"]
     pub fs_daintmsk: FS_DAINTMSK,
-    _reserved7: [u8; 8usize],
+    _reserved1: [u8; 8usize],
     #[doc = "0x28 - OTG_FS device VBUS discharge time register"]
     pub dvbusdis: DVBUSDIS,
     #[doc = "0x2c - OTG_FS device VBUS pulsing time register"]
     pub dvbuspulse: DVBUSPULSE,
-    _reserved9: [u8; 4usize],
+    _reserved2: [u8; 4usize],
     #[doc = "0x34 - OTG_FS device IN endpoint FIFO empty interrupt mask register"]
     pub diepempmsk: DIEPEMPMSK,
-    _reserved10: [u8; 200usize],
+    _reserved3: [u8; 200usize],
     #[doc = "0x100 - OTG_FS device control IN endpoint 0 control register (OTG_FS_DIEPCTL0)"]
     pub fs_diepctl0: FS_DIEPCTL0,
-    _reserved11: [u8; 4usize],
+    _reserved4: [u8; 4usize],
     #[doc = "0x108 - device endpoint-x interrupt register"]
     pub diepint0: DIEPINT0,
-    _reserved12: [u8; 4usize],
+    _reserved5: [u8; 4usize],
     #[doc = "0x110 - device endpoint-0 transfer size register"]
     pub dieptsiz0: DIEPTSIZ0,
-    _reserved13: [u8; 4usize],
+    _reserved6: [u8; 4usize],
     #[doc = "0x118 - OTG_FS device IN endpoint transmit FIFO status register"]
     pub dtxfsts0: DTXFSTS0,
-    _reserved14: [u8; 4usize],
+    _reserved7: [u8; 4usize],
     #[doc = "0x120 - OTG device endpoint-1 control register"]
     pub diepctl1: DIEPCTL1,
-    _reserved15: [u8; 4usize],
+    _reserved8: [u8; 4usize],
     #[doc = "0x128 - device endpoint-1 interrupt register"]
     pub diepint1: DIEPINT1,
-    _reserved16: [u8; 4usize],
+    _reserved9: [u8; 4usize],
     #[doc = "0x130 - device endpoint-1 transfer size register"]
     pub dieptsiz1: DIEPTSIZ1,
-    _reserved17: [u8; 4usize],
+    _reserved10: [u8; 4usize],
     #[doc = "0x138 - OTG_FS device IN endpoint transmit FIFO status register"]
     pub dtxfsts1: DTXFSTS1,
-    _reserved18: [u8; 4usize],
+    _reserved11: [u8; 4usize],
     #[doc = "0x140 - OTG device endpoint-2 control register"]
     pub diepctl2: DIEPCTL2,
-    _reserved19: [u8; 4usize],
+    _reserved12: [u8; 4usize],
     #[doc = "0x148 - device endpoint-2 interrupt register"]
     pub diepint2: DIEPINT2,
-    _reserved20: [u8; 4usize],
+    _reserved13: [u8; 4usize],
     #[doc = "0x150 - device endpoint-2 transfer size register"]
     pub dieptsiz2: DIEPTSIZ2,
-    _reserved21: [u8; 4usize],
+    _reserved14: [u8; 4usize],
     #[doc = "0x158 - OTG_FS device IN endpoint transmit FIFO status register"]
     pub dtxfsts2: DTXFSTS2,
-    _reserved22: [u8; 4usize],
+    _reserved15: [u8; 4usize],
     #[doc = "0x160 - OTG device endpoint-3 control register"]
     pub diepctl3: DIEPCTL3,
-    _reserved23: [u8; 4usize],
+    _reserved16: [u8; 4usize],
     #[doc = "0x168 - device endpoint-3 interrupt register"]
     pub diepint3: DIEPINT3,
-    _reserved24: [u8; 4usize],
+    _reserved17: [u8; 4usize],
     #[doc = "0x170 - device endpoint-3 transfer size register"]
     pub dieptsiz3: DIEPTSIZ3,
-    _reserved25: [u8; 4usize],
+    _reserved18: [u8; 4usize],
     #[doc = "0x178 - OTG_FS device IN endpoint transmit FIFO status register"]
     pub dtxfsts3: DTXFSTS3,
-    _reserved26: [u8; 388usize],
+    _reserved19: [u8; 388usize],
     #[doc = "0x300 - device endpoint-0 control register"]
     pub doepctl0: DOEPCTL0,
-    _reserved27: [u8; 4usize],
+    _reserved20: [u8; 4usize],
     #[doc = "0x308 - device endpoint-0 interrupt register"]
     pub doepint0: DOEPINT0,
-    _reserved28: [u8; 4usize],
+    _reserved21: [u8; 4usize],
     #[doc = "0x310 - device OUT endpoint-0 transfer size register"]
     pub doeptsiz0: DOEPTSIZ0,
-    _reserved29: [u8; 12usize],
+    _reserved22: [u8; 12usize],
     #[doc = "0x320 - device endpoint-1 control register"]
     pub doepctl1: DOEPCTL1,
-    _reserved30: [u8; 4usize],
+    _reserved23: [u8; 4usize],
     #[doc = "0x328 - device endpoint-1 interrupt register"]
     pub doepint1: DOEPINT1,
-    _reserved31: [u8; 4usize],
+    _reserved24: [u8; 4usize],
     #[doc = "0x330 - device OUT endpoint-1 transfer size register"]
     pub doeptsiz1: DOEPTSIZ1,
-    _reserved32: [u8; 12usize],
+    _reserved25: [u8; 12usize],
     #[doc = "0x340 - device endpoint-2 control register"]
     pub doepctl2: DOEPCTL2,
-    _reserved33: [u8; 4usize],
+    _reserved26: [u8; 4usize],
     #[doc = "0x348 - device endpoint-2 interrupt register"]
     pub doepint2: DOEPINT2,
-    _reserved34: [u8; 4usize],
+    _reserved27: [u8; 4usize],
     #[doc = "0x350 - device OUT endpoint-2 transfer size register"]
     pub doeptsiz2: DOEPTSIZ2,
-    _reserved35: [u8; 12usize],
+    _reserved28: [u8; 12usize],
     #[doc = "0x360 - device endpoint-3 control register"]
     pub doepctl3: DOEPCTL3,
-    _reserved36: [u8; 4usize],
+    _reserved29: [u8; 4usize],
     #[doc = "0x368 - device endpoint-3 interrupt register"]
     pub doepint3: DOEPINT3,
-    _reserved37: [u8; 4usize],
+    _reserved30: [u8; 4usize],
     #[doc = "0x370 - device OUT endpoint-3 transfer size register"]
     pub doeptsiz3: DOEPTSIZ3,
 }

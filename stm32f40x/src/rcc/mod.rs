@@ -13,37 +13,37 @@ pub struct RegisterBlock {
     pub ahb1rstr: AHB1RSTR,
     #[doc = "0x14 - AHB2 peripheral reset register"]
     pub ahb2rstr: AHB2RSTR,
-    _reserved6: [u8; 8usize],
+    _reserved0: [u8; 8usize],
     #[doc = "0x20 - APB1 peripheral reset register"]
     pub apb1rstr: APB1RSTR,
     #[doc = "0x24 - APB2 peripheral reset register"]
     pub apb2rstr: APB2RSTR,
-    _reserved8: [u8; 8usize],
+    _reserved1: [u8; 8usize],
     #[doc = "0x30 - AHB1 peripheral clock register"]
     pub ahb1enr: AHB1ENR,
     #[doc = "0x34 - AHB2 peripheral clock enable register"]
     pub ahb2enr: AHB2ENR,
-    _reserved10: [u8; 8usize],
+    _reserved2: [u8; 8usize],
     #[doc = "0x40 - APB1 peripheral clock enable register"]
     pub apb1enr: APB1ENR,
     #[doc = "0x44 - APB2 peripheral clock enable register"]
     pub apb2enr: APB2ENR,
-    _reserved12: [u8; 8usize],
+    _reserved3: [u8; 8usize],
     #[doc = "0x50 - AHB1 peripheral clock enable in low power mode register"]
     pub ahb1lpenr: AHB1LPENR,
     #[doc = "0x54 - AHB2 peripheral clock enable in low power mode register"]
     pub ahb2lpenr: AHB2LPENR,
-    _reserved14: [u8; 8usize],
+    _reserved4: [u8; 8usize],
     #[doc = "0x60 - APB1 peripheral clock enable in low power mode register"]
     pub apb1lpenr: APB1LPENR,
     #[doc = "0x64 - APB2 peripheral clock enabled in low power mode register"]
     pub apb2lpenr: APB2LPENR,
-    _reserved16: [u8; 8usize],
+    _reserved5: [u8; 8usize],
     #[doc = "0x70 - Backup domain control register"]
     pub bdcr: BDCR,
     #[doc = "0x74 - clock control & status register"]
     pub csr: CSR,
-    _reserved18: [u8; 8usize],
+    _reserved6: [u8; 8usize],
     #[doc = "0x80 - spread spectrum clock generation register"]
     pub sscgr: SSCGR,
     #[doc = "0x84 - PLLI2S configuration register"]

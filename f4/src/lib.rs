@@ -1,5 +1,5 @@
 #![no_std]
-#![feature(const_fn, core_intrinsics)]
+#![feature(const_fn)]
 #![cfg_attr(target_arch="arm", feature(core_intrinsics))]
 #![feature(panic_implementation, libc)]
 #![macro_use]
@@ -9,10 +9,7 @@ pub extern crate cortex_m_semihosting;
 extern crate embedded_hal as hal;
 extern crate nb;
 
-#[cfg(target_arch = "arm")]
-use core::intrinsics;
 use core::panic::PanicInfo;
-
 #[panic_implementation]
 fn panic(info: &PanicInfo) -> ! {
     unsafe  {

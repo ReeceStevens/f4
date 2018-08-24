@@ -33,10 +33,10 @@ pub struct RegisterBlock {
     pub icr: ICR,
     #[doc = "0x3c - mask register"]
     pub mask: MASK,
-    _reserved16: [u8; 8usize],
+    _reserved0: [u8; 8usize],
     #[doc = "0x48 - FIFO counter register"]
     pub fifocnt: FIFOCNT,
-    _reserved17: [u8; 52usize],
+    _reserved1: [u8; 52usize],
     #[doc = "0x80 - data FIFO register"]
     pub fifo: FIFO,
 }
