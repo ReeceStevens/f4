@@ -128,15 +128,27 @@ macro_rules! spi {
             type Error = Error;
 
             fn send(&mut self, data: u8) -> nb::Result<(), Error> {
-                self.transmit(data)?;
-                let _unused = self.receive()?;
+                match block!(self.transmit(data)) {
+                    Err(e) => { return Err(nb::Error::Other(e)); }   
+                    _ => {}
+                };
+                match block!(self.receive()) {
+                    Err(e) => { return Err(nb::Error::Other(e)); }   
+                    _ => {}
+                };
                 Ok(())
             }
 
             fn read(&mut self) -> nb::Result<u8, Error> {
                 let dummy = 0x00;
-                self.transmit(dummy)?;
-                self.receive()
+                match block!(self.transmit(dummy)) {
+                    Err(e) => { return Err(nb::Error::Other(e)); }   
+                    _ => {}
+                };
+                match block!(self.receive()) {
+                    Err(e) => Err(nb::Error::Other(e)),
+                    Ok(val) => Ok(val)
+                }
             }
         }
     }

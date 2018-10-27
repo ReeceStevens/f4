@@ -9,10 +9,12 @@ pub enum EXTITrigger {
 macro_rules! exti {
     ($exti_line:ident, $mr:ident, $tr:ident) => {
         pub mod $exti_line {
-            use stm32f40x::EXTI;
+            use stm32f40x::{EXTI, SYSCFG};
             use super::EXTITrigger;
 
-            pub fn configure(exti: &mut EXTI, trigger: EXTITrigger) {
+            pub fn configure(syscfg: &mut SYSCFG, exti: &mut EXTI, trigger: EXTITrigger) {
+                // TODO: Find correct GPIO bus to select with `bits`
+                syscfg.exticr4.modify( |_, w| unsafe { w.$exti_line().bits(0x00) });
                 exti.imr.modify(|_, w| w.$mr().set_bit());
                 match trigger {
                     EXTITrigger::Rising => {

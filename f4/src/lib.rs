@@ -7,6 +7,7 @@ pub extern crate stm32f40x;
 extern crate cortex_m;
 pub extern crate cortex_m_semihosting;
 extern crate embedded_hal as hal;
+#[macro_use]
 extern crate nb;
 
 use core::panic::PanicInfo;
