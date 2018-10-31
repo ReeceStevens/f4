@@ -63,10 +63,10 @@ pub fn get_pclk2(rcc: &RCC) -> u32 {
 
 #[derive(Clone,Copy,Debug)]
 pub struct Clocks {
-    sysclk: u32,
-    hclk: u32,
-    pclk1: u32,
-    pclk2: u32
+    pub sysclk: u32,
+    pub hclk: u32,
+    pub pclk1: u32,
+    pub pclk2: u32
 }
 
 pub fn configure_system_clocks(src: SysClkSource, rcc: &RCC, pwr: &PWR, flash: &FLASH) -> Clocks {

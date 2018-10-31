@@ -3,7 +3,7 @@
 
 use core::marker::PhantomData;
 use stm32f40x::RCC;
-use hal::digital::{InputPin, OutputPin, StatefulOutputPin};
+use hal::digital::{InputPin, OutputPin, StatefulOutputPin, toggleable};
 
 pub struct Output<MODE>(PhantomData<MODE>);
 
@@ -174,6 +174,8 @@ macro_rules! gpio {
                         !self.is_set_high()
                     }
                 }
+
+                impl<MODE> toggleable::Default for $PXi<Output<MODE>> {}
 
                 impl<MODE> $PXi<Output<MODE>> {
                     pub fn into_generic_pin(self) -> $PXx<Output<MODE>> {
