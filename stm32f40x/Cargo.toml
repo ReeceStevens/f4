@@ -11,8 +11,8 @@ cortex-m = "0.5.0"
 vcell = "0.1.0"
 
 [dependencies.cortex-m-rt]
-optional = true
-version = "0.5.0"
+features = ["device"]
+version = "0.6.5"
 
 [features]
 rt = ["cortex-m-rt/device"]
