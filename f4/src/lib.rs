@@ -11,7 +11,7 @@ extern crate embedded_hal as hal;
 extern crate nb;
 
 use core::panic::PanicInfo;
-#[panic_implementation]
+#[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     unsafe  {
         use core::intrinsics;
