@@ -1,7 +1,4 @@
 #![no_std]
-#![feature(const_fn)]
-#![cfg_attr(target_arch="arm", feature(core_intrinsics))]
-#![feature(panic_implementation, libc)]
 #![macro_use]
 pub extern crate stm32f40x;
 extern crate cortex_m;
@@ -14,12 +11,11 @@ use core::panic::PanicInfo;
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     unsafe  {
-        use core::intrinsics;
         use cortex_m::itm::write_fmt;
         use cortex_m::peripheral::ITM;
         let itm = &mut *ITM::ptr();
         write_fmt(&mut itm.stim[0], format_args!("{}", info));
-        intrinsics::abort()
+        loop {}
     }
 }
 
