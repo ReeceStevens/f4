@@ -17,3 +17,4 @@ pub mod timer;
 pub mod usart;
 pub mod adc;
 pub mod exti;
+pub mod i2c;
