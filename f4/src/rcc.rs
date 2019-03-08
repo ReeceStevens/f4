@@ -79,7 +79,7 @@ pub fn configure_system_clocks(src: SysClkSource, rcc: &RCC, pwr: &PWR, flash: &
     // PCLK1 = HCLK / 4
     // PCLK2 = HCLK / 2
     rcc.cfgr.modify(|_, w| unsafe {w.hpre().bits(0x00)});
-    rcc.cfgr.modify(|_, w| unsafe {w.ppre1().bits(0x6)});
+    rcc.cfgr.modify(|_, w| unsafe {w.ppre1().bits(0x5)});
     rcc.cfgr.modify(|_, w| unsafe {w.ppre2().bits(0x5)});
     // Suggested PLL setting:
     let pllm = 25;

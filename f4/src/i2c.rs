@@ -5,6 +5,7 @@ use nb::Error::{Other, WouldBlock};
 use hal::blocking::i2c::{Read, Write};
 
 use rcc::Clocks;
+use logger::*;
 
 use gpio::{AF4};
 use gpio::gpioa::{PA8};
@@ -25,7 +26,7 @@ impl Sda<I2C2> for PB11<AF4> {}
 impl Scl<I2C3> for PA8<AF4> {}
 impl Sda<I2C3> for PC9<AF4> {}
 
-
+#[derive(Debug)]
 pub enum Error {
     BusError,
     AckFailure,
@@ -33,21 +34,21 @@ pub enum Error {
     OverUnderrunError
 }
 
-enum Mode {
+pub enum Mode {
     Standard,
     Fast { duty: Duty },
 }
 
-enum Duty {
+pub enum Duty {
     Ratio2to1,
     Ratio16to9,
 }
 
-struct I2c<I2CX, SCL, SDA> {
+pub struct I2c<I2CX, SCL, SDA> {
     i2c: I2CX,
     scl: SCL,
     sda: SDA,
-    freq: u8,
+    freq: u32,
     mode: Mode
 }
 
@@ -74,7 +75,7 @@ macro_rules! wait_for_flag {
 }
 
 macro_rules! i2c_setup {
-    ($($I2CX:ident: ($i2cx:ident, $i2cxen:ident),)+) => {
+    ($($I2CX:ident: ($i2cx:ident, $i2cxen:ident, $i2cxrst:ident),)+) => {
     $(
         impl<SCL, SDA> I2c<$I2CX, SCL, SDA> {
             pub fn $i2cx(
@@ -82,14 +83,16 @@ macro_rules! i2c_setup {
                 i2c: $I2CX,
                 scl: SCL,
                 sda: SDA,
-                freq: u8,
+                freq: u32,
                 mode: Mode,
                 clocks: &Clocks,
             ) -> Self
                 where SCL: Scl<$I2CX>, SDA: Sda<$I2CX>
             {
                 // Enable peripheral bus
-                rcc.apb1enr.modify(|r, w| w.i2c1en().set_bit());
+                rcc.apb1enr.modify(|r, w| w.$i2cxen().set_bit());
+                rcc.apb1rstr.modify(|r, w| w.$i2cxrst().set_bit());
+                rcc.apb1rstr.modify(|r, w| w.$i2cxrst().clear_bit());
                 let i2c_interface =  I2c { i2c, scl, sda, freq, mode };
                 i2c_interface.init(clocks.pclk1);
                 i2c_interface
@@ -97,7 +100,7 @@ macro_rules! i2c_setup {
 
 
             fn init(&self, pclk1: u32) {
-                let pclk1_mhz = pclk1 / 1_000_000_u32;
+                let pclk1_mhz = (pclk1 / 1_000_000_u32).min(2);
 
                 // Disable i2c while configuring
                 self.i2c.cr1.modify(|r, w| w.pe().clear_bit());
@@ -106,8 +109,8 @@ macro_rules! i2c_setup {
 
                 match &self.mode {
                     Mode::Standard => {
-                        let ccr =  (pclk1 / (2 * self.freq as u32)).min(4);
-                        self.i2c.ccr.modify(|r, w| unsafe {
+                        let ccr =  (pclk1 / (2 * self.freq as u32)).max(4);
+                        self.i2c.ccr.write(|w| unsafe {
                             w.ccr().bits(ccr as u16)
                              .f_s().clear_bit()
                         });
@@ -120,16 +123,16 @@ macro_rules! i2c_setup {
 
                         match duty {
                             Duty::Ratio2to1 => {
-                                let ccr =  (pclk1 / (3 * self.freq as u32)).min(1);
-                                self.i2c.ccr.modify(|r, w| unsafe {
+                                let ccr =  (pclk1 / (3 * self.freq as u32)).max(1);
+                                self.i2c.ccr.write(|w| unsafe {
                                     w.ccr().bits(ccr as u16)
                                      .duty().clear_bit()
                                      .f_s().set_bit()
                                 });
                             },
                             Duty::Ratio16to9 => {
-                                let ccr =  (pclk1 / (25 * self.freq as u32)).min(1);
-                                self.i2c.ccr.modify(|r, w| unsafe {
+                                let ccr =  (pclk1 / (25 * self.freq as u32)).max(1);
+                                self.i2c.ccr.write(|w| unsafe {
                                     w.ccr().bits(ccr as u16)
                                      .duty().set_bit()
                                      .f_s().set_bit()
@@ -147,10 +150,10 @@ macro_rules! i2c_setup {
                 // Send start bit
                 self.i2c.cr1.modify(|r, w| w.start().set_bit());
                 block!(wait_for_flag!(self.i2c, sb))?;
-
                 // Send address (there are 7 and 10 bit variants, only addressing 7 here)
-                self.i2c.dr.write(|w| unsafe { w.dr().bits(address << 1) });
+                self.i2c.dr.modify(|r, w| unsafe { w.dr().bits(address << 1) });
                 block!(wait_for_flag!(self.i2c, addr))?;
+
                 self.i2c.sr2.read();
 
                 block!(wait_for_flag!(self.i2c, tx_e))?;
@@ -244,7 +247,7 @@ macro_rules! i2c_setup {
 }
 
 i2c_setup! {
-    I2C1: (i2c1, i2c1en),
-    I2C2: (i2c2, i2c2en),
-    I2C3: (i2c3, i2c3en),
+    I2C1: (i2c1, i2c1en, i2c1rst),
+    I2C2: (i2c2, i2c2en, i2c2rst),
+    I2C3: (i2c3, i2c3en, i2c3rst),
 }

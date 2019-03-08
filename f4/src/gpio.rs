@@ -209,9 +209,10 @@ macro_rules! gpio {
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(3) });
                         $PXi::<AF3> { _mode: PhantomData }
                     }
-                    pub fn into_af4(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF4> {
+                    pub fn into_af4(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF4> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(4) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
                         $PXi::<AF4> { _mode: PhantomData }
                     }
                     pub fn into_af5(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF5> {
