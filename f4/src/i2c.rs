@@ -7,7 +7,7 @@ use hal::blocking::i2c::{Read, Write};
 use rcc::Clocks;
 use logger::*;
 
-use gpio::{AF4};
+use gpio::{AF4, OpenDrain};
 use gpio::gpioa::{PA8};
 use gpio::gpiob::{PB6, PB7, PB8, PB9, PB10, PB11};
 use gpio::gpioc::PC9;
@@ -15,16 +15,16 @@ use gpio::gpioc::PC9;
 pub trait Sda<I2C> {}
 pub trait Scl<I2C> {}
 
-impl Scl<I2C1> for PB6<AF4> {}
-impl Sda<I2C1> for PB7<AF4> {}
-impl Scl<I2C1> for PB8<AF4> {}
-impl Sda<I2C1> for PB9<AF4> {}
+impl Scl<I2C1> for PB6<AF4<OpenDrain>> {}
+impl Sda<I2C1> for PB7<AF4<OpenDrain>> {}
+impl Scl<I2C1> for PB8<AF4<OpenDrain>> {}
+impl Sda<I2C1> for PB9<AF4<OpenDrain>> {}
 
-impl Scl<I2C2> for PB10<AF4> {}
-impl Sda<I2C2> for PB11<AF4> {}
+impl Scl<I2C2> for PB10<AF4<OpenDrain>> {}
+impl Sda<I2C2> for PB11<AF4<OpenDrain>> {}
 
-impl Scl<I2C3> for PA8<AF4> {}
-impl Sda<I2C3> for PC9<AF4> {}
+impl Scl<I2C3> for PA8<AF4<OpenDrain>> {}
+impl Sda<I2C3> for PC9<AF4<OpenDrain>> {}
 
 #[derive(Debug)]
 pub enum Error {

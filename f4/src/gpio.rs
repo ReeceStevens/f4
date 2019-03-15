@@ -21,15 +21,15 @@ pub struct Analog<MODE>(PhantomData<MODE>);
 pub struct AnalogIn;
 pub struct AnalogOut;
 
-pub struct AF1;
-pub struct AF2;
-pub struct AF3;
-pub struct AF4;
-pub struct AF5;
-pub struct AF6;
-pub struct AF7;
-pub struct AF8;
-pub struct AF9;
+pub struct AF1<OTYPE>(PhantomData<OTYPE>);
+pub struct AF2<OTYPE>(PhantomData<OTYPE>);
+pub struct AF3<OTYPE>(PhantomData<OTYPE>);
+pub struct AF4<OTYPE>(PhantomData<OTYPE>);
+pub struct AF5<OTYPE>(PhantomData<OTYPE>);
+pub struct AF6<OTYPE>(PhantomData<OTYPE>);
+pub struct AF7<OTYPE>(PhantomData<OTYPE>);
+pub struct AF8<OTYPE>(PhantomData<OTYPE>);
+pub struct AF9<OTYPE>(PhantomData<OTYPE>);
 
 #[derive(Copy,Clone)]
 pub enum Mode {
@@ -194,51 +194,113 @@ macro_rules! gpio {
                 }
 
                 impl<MODE> $PXi<MODE> {
-                    pub fn into_af1(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF1> {
+                    pub fn into_af1_pushpull(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF1<PushPull>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(1) });
-                        $PXi::<AF1> { _mode: PhantomData }
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi::<AF1<PushPull>> { _mode: PhantomData }
                     }
-                    pub fn into_af2(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF2> {
+                    pub fn into_af1_opendrain(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF1<OpenDrain>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(1) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
+                        $PXi::<AF1<OpenDrain>> { _mode: PhantomData }
+                    }
+                    pub fn into_af2_pushpull(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF2<PushPull>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(2) });
-                        $PXi::<AF2> { _mode: PhantomData }
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi::<AF2<PushPull>> { _mode: PhantomData }
                     }
-                    pub fn into_af3(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF3> {
+                    pub fn into_af2_opendrain(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF2<OpenDrain>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(2) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
+                        $PXi::<AF2<OpenDrain>> { _mode: PhantomData }
+                    }
+                    pub fn into_af3_pushpull(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF3<PushPull>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(3) });
-                        $PXi::<AF3> { _mode: PhantomData }
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi::<AF3<PushPull>> { _mode: PhantomData }
                     }
-                    pub fn into_af4(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF4> {
+                    pub fn into_af3_opendrain(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF3<OpenDrain>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(3) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
+                        $PXi::<AF3<OpenDrain>> { _mode: PhantomData }
+                    }
+                    pub fn into_af4_pushpull(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF4<PushPull>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(4) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi::<AF4<PushPull>> { _mode: PhantomData }
+                    }
+                    pub fn into_af4_opendrain(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF4<OpenDrain>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(4) });
                         otyper.otyper().modify(|_, w| w.$otyper().bit(true));
-                        $PXi::<AF4> { _mode: PhantomData }
+                        $PXi::<AF4<OpenDrain>> { _mode: PhantomData }
                     }
-                    pub fn into_af5(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF5> {
+                    pub fn into_af5_pushpull(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF5<PushPull>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(5) });
-                        $PXi::<AF5> { _mode: PhantomData }
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi::<AF5<PushPull>> { _mode: PhantomData }
                     }
-                    pub fn into_af6(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF6> {
+                    pub fn into_af5_opendrain(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF5<OpenDrain>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(5) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
+                        $PXi::<AF5<OpenDrain>> { _mode: PhantomData }
+                    }
+                    pub fn into_af6_pushpull(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF6<PushPull>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(6) });
-                        $PXi::<AF6> { _mode: PhantomData }
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi::<AF6<PushPull>> { _mode: PhantomData }
                     }
-                    pub fn into_af7(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF7> {
+                    pub fn into_af6_opendrain(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF6<OpenDrain>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(6) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
+                        $PXi::<AF6<OpenDrain>> { _mode: PhantomData }
+                    }
+                    pub fn into_af7_pushpull(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF7<PushPull>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(7) });
-                        $PXi::<AF7> { _mode: PhantomData }
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi::<AF7<PushPull>> { _mode: PhantomData }
                     }
-                    pub fn into_af8(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF8> {
+                    pub fn into_af7_opendrain(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF7<OpenDrain>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(7) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
+                        $PXi::<AF7<OpenDrain>> { _mode: PhantomData }
+                    }
+                    pub fn into_af8_pushpull(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF8<PushPull>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(8) });
-                        $PXi::<AF8> { _mode: PhantomData }
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi::<AF8<PushPull>> { _mode: PhantomData }
                     }
-                    pub fn into_af9(self, moder: &mut MODER, afr: &mut $AFR) -> $PXi<AF9> {
+                    pub fn into_af8_opendrain(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF8<OpenDrain>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(8) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
+                        $PXi::<AF8<OpenDrain>> { _mode: PhantomData }
+                    }
+                    pub fn into_af9_pushpull(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF9<PushPull>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
                         afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(9) });
-                        $PXi::<AF9> { _mode: PhantomData }
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(false));
+                        $PXi::<AF9<PushPull>> { _mode: PhantomData }
+                    }
+                    pub fn into_af9_opendrain(self, moder: &mut MODER, afr: &mut $AFR, otyper: &mut OTYPER) -> $PXi<AF9<OpenDrain>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::AF as u8) });
+                        afr.$afr().modify(|_, w| unsafe { w.$afr_num().bits(9) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
+                        $PXi::<AF9<OpenDrain>> { _mode: PhantomData }
                     }
 
                     pub fn into_pushpull_output(self, moder: &mut MODER, otyper: &mut OTYPER) -> $PXi<Output<PushPull>> {

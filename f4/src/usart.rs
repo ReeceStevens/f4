@@ -1,5 +1,5 @@
 use stm32f40x::{RCC, USART1, USART2, USART6};
-use gpio::{AF7, AF8};
+use gpio::{AF7, AF8, PushPull};
 use gpio::gpioa::{PA9, PA15, PA10, PA2, PA3, PA11, PA12};
 use gpio::gpiob::{PB3, PB7, PB6};
 use rcc::get_pclk2;
@@ -10,18 +10,18 @@ use core::fmt;
 pub trait TxPin<USART> {}
 pub trait RxPin<USART> {}
 
-impl TxPin<USART1> for PA9<AF7> {}
-impl TxPin<USART1> for PA15<AF7> {}
-impl TxPin<USART1> for PB6<AF7> {}
-impl RxPin<USART1> for PA10<AF7> {}
-impl RxPin<USART1> for PB3<AF7> {}
-impl RxPin<USART1> for PB7<AF7> {}
+impl TxPin<USART1> for PA9<AF7<PushPull>> {}
+impl TxPin<USART1> for PA15<AF7<PushPull>> {}
+impl TxPin<USART1> for PB6<AF7<PushPull>> {}
+impl RxPin<USART1> for PA10<AF7<PushPull>> {}
+impl RxPin<USART1> for PB3<AF7<PushPull>> {}
+impl RxPin<USART1> for PB7<AF7<PushPull>> {}
 
-impl TxPin<USART2> for PA2<AF7> {}
-impl RxPin<USART2> for PA3<AF7> {}
+impl TxPin<USART2> for PA2<AF7<PushPull>> {}
+impl RxPin<USART2> for PA3<AF7<PushPull>> {}
 
-impl TxPin<USART6> for PA11<AF8> {}
-impl RxPin<USART6> for PA12<AF8> {}
+impl TxPin<USART6> for PA11<AF8<PushPull>> {}
+impl RxPin<USART6> for PA12<AF8<PushPull>> {}
 
 pub struct Usart<USART, PINS> {
     usart: USART,

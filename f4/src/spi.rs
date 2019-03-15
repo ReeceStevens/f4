@@ -4,7 +4,7 @@ use hal::spi::FullDuplex;
 use nb;
 
 use stm32f40x::{SPI1, SPI2, SPI4, RCC};
-use gpio::AF5;
+use gpio::{AF5, PushPull};
 use gpio::gpioa::{PA5, PA6, PA7, PA11, PA1};
 use gpio::gpiob::{PB14, PB15, PB13};
 use gpio::gpioc::{PC7};
@@ -13,17 +13,17 @@ pub trait Sclk<SPI> {}
 pub trait Miso<SPI> {}
 pub trait Mosi<SPI> {}
 
-impl Sclk<SPI1> for PA5<AF5> {}
-impl Miso<SPI1> for PA6<AF5> {}
-impl Mosi<SPI1> for PA7<AF5> {}
+impl Sclk<SPI1> for PA5<AF5<PushPull>> {}
+impl Miso<SPI1> for PA6<AF5<PushPull>> {}
+impl Mosi<SPI1> for PA7<AF5<PushPull>> {}
 
-impl Sclk<SPI2> for PC7<AF5> {}
-impl Miso<SPI2> for PB14<AF5> {}
-impl Mosi<SPI2> for PB15<AF5> {}
+impl Sclk<SPI2> for PC7<AF5<PushPull>> {}
+impl Miso<SPI2> for PB14<AF5<PushPull>> {}
+impl Mosi<SPI2> for PB15<AF5<PushPull>> {}
 
-impl Sclk<SPI2> for PB13<AF5> {}
-impl Miso<SPI2> for PA11<AF5> {}
-impl Mosi<SPI2> for PA1<AF5> {}
+impl Sclk<SPI2> for PB13<AF5<PushPull>> {}
+impl Miso<SPI2> for PA11<AF5<PushPull>> {}
+impl Mosi<SPI2> for PA1<AF5<PushPull>> {}
 
 pub struct Spi<SPIX, PINS> {
     spi: SPIX,
