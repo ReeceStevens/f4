@@ -1,6 +1,7 @@
 #![cfg_attr(not(test), no_std)]
 #![macro_use]
 pub extern crate stm32f40x;
+extern crate vcell;
 extern crate cortex_m;
 pub extern crate cortex_m_semihosting;
 extern crate embedded_hal as hal;

@@ -1,3 +1,4 @@
+use vcell::VolatileCell;
 use stm32f40x::{RCC, PWR, FLASH};
 
 #[allow(dead_code)]
@@ -121,5 +122,19 @@ pub fn configure_system_clocks(src: SysClkSource, rcc: &RCC, pwr: &PWR, flash: &
         pclk1: get_pclk1(rcc),
         pclk2:  get_pclk2(rcc)
     }
+}
 
+/// Perform a busy wait sleep for {ms} milliseconds.
+///
+/// The wait time is calibrated for the HSE frequency, roughly. This is not guaranteed to be a
+/// precise wait time; timers or systick should be used if more precise timing restrictions are
+/// needed
+pub fn busy_sleep(ms: u32) {
+    let loop_iterations = ms * (HSE_VALUE / 1000) / 4;
+    let i_cell: VolatileCell<u32> = VolatileCell::new(0);
+    let mut current_val = 0;
+    while current_val < loop_iterations {
+        i_cell.get();
+        current_val += 1;
+    }
 }
