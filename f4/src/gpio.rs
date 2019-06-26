@@ -132,20 +132,30 @@ macro_rules! gpio {
                 _mode: PhantomData<MODE>
             }
 
+            impl<MODE> $PXx<Input<MODE>> {
+                pub fn read(&self) -> bool {
+                    unsafe { &(*$GPIO_BUS::ptr()).idr.read().bits() & (1 << self.i) != 0 }
+                }
+            }
+
             // These unsafe functions are a single atomic write operation.
-            impl<MODE> $PXx<Output<MODE>> {
-                pub fn set_high(&self) {
+            impl<MODE> OutputPin for $PXx<Output<MODE>> {
+                fn set_high(&mut self) {
                     unsafe { &(*$GPIO_BUS::ptr()).bsrr.write(|w| w.bits(1 << self.i)); }
                 }
 
-                pub fn set_low(&self) {
+                fn set_low(&mut self) {
                     unsafe { &(*$GPIO_BUS::ptr()).bsrr.write(|w| w.bits(1 << (self.i + 16))); }
                 }
             }
 
-            impl<MODE> $PXx<Input<MODE>> {
-                pub fn read(&self) -> bool {
-                    unsafe { &(*$GPIO_BUS::ptr()).idr.read().bits() & (1 << self.i) != 0 }
+            impl<MODE> InputPin for $PXx<Input<MODE>> {
+                fn is_high(&self) -> bool {
+                    self.read()
+                }
+
+                fn is_low(&self) -> bool {
+                    !self.is_high()
                 }
             }
 
