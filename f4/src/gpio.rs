@@ -319,6 +319,12 @@ macro_rules! gpio {
                         $PXi::<Output<PushPull>> { _mode: PhantomData }
                     }
 
+                    pub fn into_opendrain_output(self, moder: &mut MODER, otyper: &mut OTYPER) -> $PXi<Output<OpenDrain>> {
+                        moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::OUT as u8) });
+                        otyper.otyper().modify(|_, w| w.$otyper().bit(true));
+                        $PXi::<Output<OpenDrain>> { _mode: PhantomData }
+                    }
+
                     pub fn into_pulldown_input(self, moder: &mut MODER, pupdr: &mut PUPDR) -> $PXi<Input<Down>> {
                         moder.moder().modify(|_, w| unsafe { w.$moder().bits(Mode::IN as u8) });
                         pupdr.pupdr().modify(|_, w| unsafe { w.$pupdr().bits(PuPd::Down as u8) });
