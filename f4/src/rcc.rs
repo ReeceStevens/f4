@@ -2,7 +2,6 @@ use vcell::VolatileCell;
 use stm32f40x::{RCC, PWR, FLASH};
 
 #[allow(dead_code)]
-const ABP1_CLOCK_SPEED: u32 = 21_000_000; // 21 MHz
 const HSI_VALUE: u32 = 16_000_000;
 // const HSE_VALUE: u32 = 25_000_000;
 const HSE_VALUE: u32 = 8_000_000; // On the discovery board, HSE == 8Mhz
@@ -81,7 +80,7 @@ pub fn configure_system_clocks(src: SysClkSource, rcc: &RCC, pwr: &PWR, flash: &
     // PCLK2 = HCLK / 2
     rcc.cfgr.modify(|_, w| unsafe {w.hpre().bits(0x00)});
     rcc.cfgr.modify(|_, w| unsafe {w.ppre1().bits(0x5)});
-    rcc.cfgr.modify(|_, w| unsafe {w.ppre2().bits(0x5)});
+    rcc.cfgr.modify(|_, w| unsafe {w.ppre2().bits(0x4)});
     // Suggested PLL setting:
     let pllm = 25;
     let plln = 336;

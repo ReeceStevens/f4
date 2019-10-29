@@ -25,7 +25,19 @@ macro_rules! setup_timer {
         impl<'a> $timer_name<'a> {
             pub fn init(&self, rcc: &RCC, frequency: u32) {
                 let timx = self.0;
-                let clock_speed: u32 = $clkspeed(rcc);
+                let no_apb_prescale = rcc.cfgr.read().ppre1().bits() < 4;
+                // A key hidden quote from the reference manual:
+                //     The timer clock frequencies for STM32F411xC/E are automatically set by hardware. There
+                //     are two cases:
+                //     1. If the APB prescaler is 1, the timer clock frequencies are set to the same frequency as
+                //     that of the APB domain to which the timers are connected.
+                //     2. Otherwise, they are set to twice (×2) the frequency of the APB domain to which the
+                //     timers are connected.
+                let clock_speed: u32 = if no_apb_prescale {
+                    $clkspeed(rcc)
+                } else {
+                    $clkspeed(rcc) * 2
+                };
                 let ticks_per_timer: u32 = clock_speed / frequency;
                 let prescaler_value = (ticks_per_timer - 1) >> 16;
                 let autoreload_value = ticks_per_timer / (prescaler_value + 1);
