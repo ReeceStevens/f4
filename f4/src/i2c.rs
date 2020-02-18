@@ -26,7 +26,7 @@ impl Sda<I2C2> for PB11<AF4<OpenDrain>> {}
 impl Scl<I2C3> for PA8<AF4<OpenDrain>> {}
 impl Sda<I2C3> for PC9<AF4<OpenDrain>> {}
 
-#[derive(Debug)]
+#[derive(Debug,Copy,Clone,PartialEq)]
 pub enum Error {
     BusError,
     AckFailure,

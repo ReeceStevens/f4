@@ -36,7 +36,7 @@ pub trait DuplexTransfer {
 }
 
 /// SPI Error
-#[derive(Debug)]
+#[derive(Debug,PartialEq,Copy,Clone)]
 pub enum Error {
     /// Overrun occurred
     Overrun,
